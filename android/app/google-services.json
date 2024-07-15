@@ -1,0 +1,43 @@
+{
+  "project_info": {
+    "project_number": "511251591516",
+    "project_id": "rn-demoapp2",
+    "storage_bucket": "rn-demoapp2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:511251591516:android:3117ad40fac5068a939199",
+        "android_client_info": {
+          "package_name": "com.tychow45.demoapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "511251591516-aqjmim48gcf7d5ncmrbgpsvg7kpca8b1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tychow45.demoapp",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGPHuB52SIlQG6TLcOGkFBMUsPjRVvevA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "511251591516-t4a7oo1opra78gh46uo0p6tpv2fcb4ee.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

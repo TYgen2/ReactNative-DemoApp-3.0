@@ -1,0 +1,66 @@
+{
+  "expo": {
+    "name": "DemoApp",
+    "slug": "DemoApp",
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
+      ],
+      "expo-asset",
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-font",
+        {
+          "fonts": ["./assets/fonts/Caveat-VariableFont_wght.ttf"]
+        }
+      ],
+      [
+        "react-native-fbsdk-next",
+        {
+          "appID": "430970479827244",
+          "clientToken": "b4673e84ffbb9b3004469bd78d04a3af",
+          "displayName": "ARTpreciate",
+          "scheme": "fb430970479827244",
+          "advertiserIDCollectionEnabled": true,
+          "autoLogAppEventsEnabled": true,
+          "isAutoInitEnabled": true
+        }
+      ]
+    ],
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "softwareKeyboardLayoutMode": "pan",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": ["android.permission.RECORD_AUDIO"],
+      "package": "com.tychow45.demoapp",
+      "googleServicesFile": "./google-services.json"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c5a32e6b-5c2f-40ec-839e-7aee91e627ed"
+      }
+    },
+    "scheme": "com.tychow45.demoapp"
+  }
+}
