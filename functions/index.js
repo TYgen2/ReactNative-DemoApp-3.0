@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
-const serviceAcc = require("./rn-demoapp2-firebase-adminsdk-pbkmf-0a6d167499.json");
+// const serviceAcc = require("./rn-demoapp2-firebase-adminsdk-pbkmf-9a860d71b4.json");
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAcc),
+  credential: admin.credential.applicationDefault(),
 });
 const db = admin.firestore();
 const storage = admin.storage();
@@ -11,6 +11,28 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { FieldValue } = require("firebase-admin/firestore");
 
 /*TO TEST onCall functions in Postman, must use POST method*/
+
+// fetch 10 initial arts shown in search page **WORKING NOW, DONT FKING TOUCH**
+exports.fetchArts = onCall(async (req) => {
+  if (!req.auth) {
+    throw new HttpsError("failed-precondition", "CANT FKING FETCH ARTS");
+  }
+
+  try {
+    const snapshot = await db
+      .collection("illustrations")
+      .orderBy("uploadedTime", "desc")
+      .limit(10)
+      .get();
+    const userData = snapshot.docs.map((doc) => ({
+      artworkID: doc.id,
+      ...doc.data(),
+    }));
+    return { status: 200, data: userData };
+  } catch (error) {
+    return { status: 500, error: error.message };
+  }
+});
 
 // like counter for each art **WORKING NOW, DONT FKING TOUCH**
 exports.likeCount = onCall(async (req) => {
@@ -254,28 +276,6 @@ exports.deleteFromUploaded = onCall(async (req) => {
     // after delete, artItem and uploadedItem page error (no likes)
 
     return { status: 200, message: "Deleted from uploaded art successfully!!" };
-  } catch (error) {
-    return { status: 500, error: error.message };
-  }
-});
-
-// fetch 10 initial arts shown in search page **WORKING NOW, DONT FKING TOUCH**
-exports.fetchArts = onCall(async (req) => {
-  if (!req.auth) {
-    throw new HttpsError("failed-precondition", "CANT FKING FETCH ARTS");
-  }
-
-  try {
-    const snapshot = await db
-      .collection("illustrations")
-      .orderBy("uploadedTime", "desc")
-      .limit(10)
-      .get();
-    const userData = snapshot.docs.map((doc) => ({
-      artworkID: doc.id,
-      ...doc.data(),
-    }));
-    return { status: 200, data: userData };
   } catch (error) {
     return { status: 500, error: error.message };
   }

@@ -42,7 +42,7 @@ const Artwork = ({ route }) => {
   };
 
   // fetch required arts using CLOUD FUNCTION, WORKING!!!
-  const fetchArts = () => {
+  const fetchArts = async () => {
     const fetchCallable = httpsCallable(functions, "paginationFetch");
     fetchCallable({ page: currentPage, limit: PER_PAGE }).then(async (res) => {
       // go to top for displaying the loading logo
