@@ -2,6 +2,9 @@
 Same app as 2.0, but now I'm trying to move all the CRUD functions from client-side to
 server-side (using Cloud function). Since its a huge move, around 80% of the app will be remake.
 
+For app download, please go to https://github.com/TYgen2/ReactNative-DemoApp-2.0 (APK for android only)
+DemoApp 3.0 is still under development.
+
 # ✏ToDo list
 - [x] Cloud function discovery
 - [x] Artwork Pagination
