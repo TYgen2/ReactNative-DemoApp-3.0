@@ -74,7 +74,8 @@ export default searchItem = ({
       style={styles.itemContainer}
       onPress={() =>
         navigation.navigate("Full art", {
-          user: guest ? null : userId,
+          user: userId,
+          artistId: "",
           artworkId: artworkId,
           fav: status,
           imgUrl: imgUrl,
@@ -89,7 +90,7 @@ export default searchItem = ({
           navigation.push("Profile", {
             user: userId,
             guest: guest,
-            id: artistId,
+            artistId: artistId,
             name: artist,
             sign: artistSign,
             icon: artistIcon,

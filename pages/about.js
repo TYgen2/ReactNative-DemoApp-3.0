@@ -10,7 +10,7 @@ const About = () => (
       imageStyle={{ opacity: 0.4 }}
     >
       <View style={styles.pagePadding}>
-        <Text style={styles.title}>ARTppreciate v2.0</Text>
+        <Text style={styles.title}>ARTppreciate v3.0</Text>
         <View
           style={{
             borderBottomColor: "#28282B",
@@ -19,8 +19,8 @@ const About = () => (
           }}
         />
         <Text style={styles.text}>
-          This is the same demo app{"\n"} as the Flutter one but built with
-          React Native and more functions
+          This is the same demo app as 2.0{"\n"} But I'm moving all the CRUD
+          functions to cloud{"\n"} This is still under development
         </Text>
       </View>
     </ImageBackground>

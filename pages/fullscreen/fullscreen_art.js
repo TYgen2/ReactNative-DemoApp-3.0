@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   LogBox,
   Text,
+  ActivityIndicator,
 } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
@@ -113,7 +114,7 @@ const Fullscreen = ({ route }) => {
         <TouchableOpacity
           style={[
             styles.deleteButton,
-            { opacity: showExtra && myUser ? 1 : 0 },
+            { opacity: showExtra && myUser && !isLoading ? 1 : 0 },
           ]}
           disabled={myUser ? false : true}
           onPress={async () => {
@@ -167,22 +168,28 @@ const Fullscreen = ({ route }) => {
         </TouchableOpacity>
 
         {/* fullscreen of art */}
-        <ImageZoom
-          isDoubleTapEnabled={true}
-          isPinchEnabled={true}
-          minPanPointers={1}
-          source={{ uri: imgUrl }}
-          style={{
-            flex: 1,
-            resizeMode: "contain",
-            zIndex: 1,
-          }}
-        />
+        {isLoading ? (
+          <View style={{ flex: 1, justifyContent: "center" }}>
+            <ActivityIndicator size="large" color="#483C32" />
+          </View>
+        ) : (
+          <ImageZoom
+            isDoubleTapEnabled={true}
+            isPinchEnabled={true}
+            minPanPointers={1}
+            source={{ uri: imgUrl }}
+            style={{
+              flex: 1,
+              resizeMode: "contain",
+              zIndex: 1,
+            }}
+          />
+        )}
       </TouchableOpacity>
       <View style={styles.buttonContainer}>
         {/* save to local button */}
         <TouchableOpacity
-          style={[styles.button, { opacity: showExtra ? 1 : 0 }]}
+          style={[styles.button, { opacity: showExtra && !isLoading ? 1 : 0 }]}
           disabled={showExtra ? false : true}
           onPress={() => saveImg(imgUrl, artFilename)}
         >
@@ -190,7 +197,7 @@ const Fullscreen = ({ route }) => {
         </TouchableOpacity>
         {/* fav/unfav button */}
         <TouchableOpacity
-          style={[styles.button, { opacity: showExtra ? 1 : 0 }]}
+          style={[styles.button, { opacity: showExtra && !isLoading ? 1 : 0 }]}
           disabled={showExtra ? false : true}
           onPress={async () => {
             const favJSON = {

@@ -6,71 +6,41 @@ import {
   TextInput,
   View,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTheme } from "../context/themeProvider";
-import { Dropdown } from "react-native-element-dropdown";
-import { TouchableOpacity } from "react-native-gesture-handler";
 import SearchItem from "../components/searchItem";
 import { Icon } from "@rneui/themed";
-import { FormatArtist, FormatName, GetHeaderHeight } from "../utils/tools";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../firebaseConfig";
+import { GetHeaderHeight } from "../utils/tools";
+import { useSearchBox, useInfiniteHits } from "react-instantsearch-core";
 
 const Search = ({ route }) => {
   const { colors } = useTheme();
   const { guest } = route.params;
 
-  const options = [
-    { label: "By name", value: "1" },
-    { label: "By artist", value: "2" },
-  ];
-  const [value, setValue] = useState(1);
-  const [initialArts, setInitialArts] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [serach, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [hitsInitialized, setHitsInitialized] = useState(false);
 
-  // fetch 10 initial arts using CLOUD FUNCTION, WORKING!!!
-  const fetchArts = () => {
-    const fetchCallable = httpsCallable(functions, "fetchArts");
-    fetchCallable().then((res) => {
-      setInitialArts(res.data["data"]);
-      setIsLoading(false);
-    });
+  const { query, refine } = useSearchBox();
+  const [inputValue, setInputValue] = useState(query);
+  const inputRef = useRef(null);
+
+  const setQuery = (newQuery) => {
+    setInputValue(newQuery);
+    refine(newQuery);
   };
 
-  const serachFilter = (text, mode) => {
-    if (text) {
-      const newData = artList.filter((art) => {
-        const artName = FormatName(art.name);
-        const artArtist = FormatArtist(art.name);
+  const { hits, isLastPage, showMore } = useInfiniteHits({
+    escapeHTML: false,
+  });
 
-        const nameData = artName ? artName.toLowerCase() : "".toLowerCase();
-        const artistData = artArtist
-          ? artArtist.toLowerCase()
-          : "".toLowerCase();
-        const textData = text.toLowerCase();
-
-        // mode for determine art filter search by name or artist
-        // 1: name, 2: artist
-
-        return mode == 1
-          ? nameData.indexOf(textData) > -1
-          : artistData.indexOf(textData) > -1;
-      });
-      setFiltered(newData);
-      setSearch(text);
-    } else {
-      // default when no search text is typed
-      setFiltered(artList);
-      setSearch(text);
-    }
-  };
+  if (query !== inputValue && !inputRef.current?.isFocused()) {
+    setInputValue(query);
+  }
 
   const renderItem = ({ item }) => (
     <SearchItem
       guest={guest}
-      artworkId={item["artworkID"]}
+      artworkId={item["artworkId"]}
       artFilename={item["artFilename"]}
       artName={item["artName"]}
       artist={item["artist"]}
@@ -80,8 +50,11 @@ const Search = ({ route }) => {
   );
 
   useEffect(() => {
-    fetchArts();
-  }, []);
+    if (hits.length > 0 && !hitsInitialized) {
+      setIsLoading(false);
+      setHitsInitialized(true);
+    }
+  }, [hits, hitsInitialized]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -91,6 +64,7 @@ const Search = ({ route }) => {
           { backgroundColor: colors.background, marginTop: GetHeaderHeight() },
         ]}
       >
+        {/* title */}
         <Text
           style={{
             fontWeight: "bold",
@@ -101,34 +75,6 @@ const Search = ({ route }) => {
         >
           Search for an Artwork
         </Text>
-        <TouchableOpacity
-          style={{
-            position: "absolute",
-            right: 8,
-            top: -16,
-          }}
-        >
-          <Dropdown
-            placeholderStyle={{ color: "#0096FF", fontSize: 14 }}
-            selectedTextStyle={{ color: "#0096FF", fontSize: 14 }}
-            containerStyle={{ borderRadius: 10 }}
-            itemContainerStyle={{
-              width: 90,
-              alignSelf: "center",
-            }}
-            itemTextStyle={{
-              fontSize: 14,
-            }}
-            data={options}
-            labelField="label"
-            valueField="value"
-            placeholder="By name"
-            value={value}
-            onChange={(item) => {
-              setValue(item.value);
-            }}
-          />
-        </TouchableOpacity>
       </View>
 
       <View style={[styles.searchBar]}>
@@ -139,15 +85,21 @@ const Search = ({ route }) => {
           color={colors.subtitle}
         />
         <TextInput
+          ref={inputRef}
           autoCapitalize="none"
           style={styles.textInput}
-          placeholder={value == "1" ? "e.g. chlorine " : "e.g. torino "}
+          placeholder="e.g. chlorine "
           placeholderTextColor={colors.subtitle}
           fontWeight="bold"
-          value={serach}
-          onChangeText={(text) => serachFilter(text, value)}
+          value={inputValue}
+          onChangeText={setQuery}
+          autoCorrect={false}
+          spellCheck={false}
+          autoComplete="off"
         />
       </View>
+
+      {/* filtered artList */}
       <View style={styles.searchContent}>
         <FlatList
           contentContainerStyle={{ flexGrow: 1 }}
@@ -168,9 +120,14 @@ const Search = ({ route }) => {
               )}
             </View>
           }
-          data={filtered.length != 0 ? filtered : initialArts}
+          data={hits}
           overScrollMode="never"
           renderItem={renderItem}
+          onEndReached={() => {
+            if (!isLastPage) {
+              showMore();
+            }
+          }}
         />
       </View>
     </View>
