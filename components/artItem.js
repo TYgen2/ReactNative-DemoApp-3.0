@@ -12,11 +12,7 @@ import { NotifyMessage, Capitalize } from "../utils/tools";
 import { db } from "../firebaseConfig";
 import { useNavigation } from "@react-navigation/native";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
-import {
-  deleteFromFav,
-  likeCount,
-  saveToFav,
-} from "../services/cloudFunctions";
+import { handleFavAndLikes } from "../services/cloudFunctions";
 import { UpdateContext } from "../context/updateArt";
 
 const artItem = ({
@@ -196,29 +192,20 @@ const artItem = ({
             <TouchableOpacity
               style={styles.favButton}
               onPress={() => {
-                const favJSON = {
+                const handleJSON = {
+                  favStatus: status,
                   userId: userId,
                   imgUrl: imgUrl,
                   artworkId: artworkId,
-                };
-
-                const likeJSON = {
-                  artworkId: artworkId,
-                  addOne: status ? -1 : 1,
+                  value: status ? -1 : 1,
                 };
 
                 if (guest) {
                   NotifyMessage("Sign in to use the Favourite function.");
                   return;
-                } else if (status) {
-                  // faved, now unfav
-                  deleteFromFav(favJSON);
                 } else {
-                  // unfav, now fav
-                  saveToFav(favJSON);
+                  handleFavAndLikes(handleJSON);
                 }
-
-                likeCount(likeJSON);
               }}
             >
               <Icon

@@ -1,17 +1,11 @@
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FlatList } from "react-native-gesture-handler";
 import FavItem from "../../components/favItem";
 import { auth, db } from "../../firebaseConfig";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useTheme } from "../../context/themeProvider";
-import {
-  Capitalize,
-  GetHeaderHeight,
-  Uncapitalize,
-  sleep,
-} from "../../utils/tools";
-import { UpdateContext } from "../../context/updateArt";
+import { GetHeaderHeight, Uncapitalize, sleep } from "../../utils/tools";
 import { getDownloadURL, getStorage, ref } from "firebase/storage";
 import { DelArt } from "../../services/fav";
 
@@ -37,6 +31,7 @@ const Favourites = ({ route }) => {
       return false;
     }
   };
+
   const checkValidFav = async () => {
     setIsLoading(true);
     // delete art from Fav if the original art doesn't exist anymore

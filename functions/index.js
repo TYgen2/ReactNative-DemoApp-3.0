@@ -33,78 +33,66 @@ exports.fetchArts = onCall(async (req) => {
   }
 });
 
-// like counter for each art **WORKING NOW, DONT FKING TOUCH**
-exports.likeCount = onCall(async (req) => {
+// save to / delete from FavArt in Firestore, like counter for each art
+// **WORKING NOW, DONT FKING TOUCH**
+exports.handleFavAndLikes = onCall(async (req) => {
   if (!req.auth) {
-    throw new HttpsError("failed-precondition", "CANT FKING FAV ARTS");
+    throw new HttpsError("failed-precondition", "CANT FKING UNFAV ARTS");
   }
 
-  const artworkId = req.data.artworkId;
-  const addOne = req.data.addOne;
+  const { favStatus, userId, imgUrl, artworkId, value } = req.data;
+
+  // User liked before, now proceed to delete
+  if (favStatus) {
+    try {
+      await db
+        .collection("user")
+        .doc(userId)
+        .update({
+          FavArt: FieldValue.arrayRemove({ imgUrl, artworkId }),
+        });
+    } catch (error) {
+      console.error(error);
+      return { status: 500, message: "Error updating Firestore when DELETING" };
+    }
+  } else {
+    // User haven't like, now proceed to like
+    try {
+      await db
+        .collection("user")
+        .doc(userId)
+        .update({
+          FavArt: FieldValue.arrayUnion({ imgUrl, artworkId }),
+        });
+    } catch (error) {
+      console.error(error);
+      return { status: 500, message: "Error updating Firestore when ADDING" };
+    }
+  }
 
   try {
     await db
       .runTransaction((transaction) => {
         transaction.update(db.collection("illustrations").doc(artworkId), {
-          likes: FieldValue.increment(addOne),
+          likes: FieldValue.increment(value),
         });
-        return Promise.resolve();
+        return new Promise((resolve) =>
+          resolve({
+            status: 200,
+            message: favStatus
+              ? "Art deleted from favorites!"
+              : "Art saved to favorites!",
+          })
+        );
       })
       .then(() => console.log("UPDATED LIKE COUNT!!"));
   } catch (error) {
     console.error(error);
-    return { status: 500, message: "Error updating Firestore" };
+    return {
+      status: 500,
+      message: "Error updating Firestore when modifying LIKES",
+    };
   }
-});
-
-// save to FavArt in Firestore **WORKING NOW, DONT FKING TOUCH**
-exports.saveToFav = onCall(async (req) => {
-  if (!req.auth) {
-    throw new HttpsError("failed-precondition", "CANT FKING FAV ARTS");
-  }
-
-  const { userId, imgUrl, artworkId } = req.data;
-
-  try {
-    await db
-      .collection("user")
-      .doc(userId)
-      .update({
-        FavArt: FieldValue.arrayUnion({ imgUrl, artworkId }),
-      });
-  } catch (error) {
-    console.error(error);
-    return { status: 500, message: "Error updating Firestore" };
-  }
-
-  return new Promise((resolve) =>
-    resolve({ status: 200, message: "Art saved to favorites!" })
-  );
-});
-
-// delete from FavArt in Firestore **WORKING NOW, DONT FKING TOUCH**
-exports.deleteFromFav = onCall(async (req) => {
-  if (!req.auth) {
-    throw new HttpsError("failed-precondition", "CANT FKING UNFAV ARTS");
-  }
-
-  const { userId, imgUrl, artworkId } = req.data;
-
-  try {
-    await db
-      .collection("user")
-      .doc(userId)
-      .update({
-        FavArt: FieldValue.arrayRemove({ imgUrl, artworkId }),
-      });
-  } catch (error) {
-    console.error(error);
-    return { status: 500, message: "Error updating Firestore" };
-  }
-
-  return new Promise((resolve) =>
-    resolve({ status: 200, message: "Art deleted from favorites!" })
-  );
 });
 
 // fetch art metadata when in Fullscreen **WORKING NOW, DONT FKING TOUCH**

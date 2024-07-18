@@ -18,10 +18,8 @@ import { doc, getDoc } from "firebase/firestore";
 import { db, functions } from "../../firebaseConfig";
 import { ImageZoom } from "@likashefqet/react-native-image-zoom";
 import {
-  deleteFromFav,
   deleteFromUploaded,
-  likeCount,
-  saveToFav,
+  handleFavAndLikes,
 } from "../../services/cloudFunctions";
 import { httpsCallable } from "firebase/functions";
 import { getStorage, ref } from "firebase/storage";
@@ -143,9 +141,6 @@ const Fullscreen = ({ route }) => {
             );
             // deletion
             if (choice === "yes") {
-              // set loading in random page = true to prevent art undefined
-              // setRanLoading(true);
-
               // firstly check whether the target art is faved by the user,
               // if no: only remove it from UploadedArt
               // if yes: remove it from both FavArt & UploadedArt
@@ -200,15 +195,12 @@ const Fullscreen = ({ route }) => {
           style={[styles.button, { opacity: showExtra && !isLoading ? 1 : 0 }]}
           disabled={showExtra ? false : true}
           onPress={async () => {
-            const favJSON = {
+            const handleJSON = {
+              favStatus: updatedStatus,
               userId: user,
               imgUrl: artInfo["imgUrl"],
               artworkId: artworkId,
-            };
-
-            const likeJSON = {
-              artworkId: artworkId,
-              addOne: updatedStatus ? -1 : 1,
+              value: updatedStatus ? -1 : 1,
             };
 
             // guest mode
@@ -231,8 +223,7 @@ const Fullscreen = ({ route }) => {
                 }
               );
               if (choice === "yes") {
-                // DelArt(user, art);
-                deleteFromFav(favJSON).then(() => {
+                handleFavAndLikes(handleJSON).then(() => {
                   setUpdatedStatus(false);
                   navigation.goBack();
                   Toast.show({
@@ -248,11 +239,8 @@ const Fullscreen = ({ route }) => {
             }
             // not faved, fav now
             else {
-              saveToFav(favJSON);
-              setUpdatedStatus(true);
+              handleFavAndLikes(handleJSON).then(() => setUpdatedStatus(true));
             }
-
-            likeCount(likeJSON);
           }}
         >
           <Icon
