@@ -232,14 +232,15 @@ const Fullscreen = ({ route }) => {
               );
               if (choice === "yes") {
                 // DelArt(user, art);
-                deleteFromFav(favJSON);
-                setUpdatedStatus(false);
-                navigation.goBack();
-                Toast.show({
-                  type: "success",
-                  text1: "Successfully deleted.",
-                  position: "top",
-                  visibilityTime: 2000,
+                deleteFromFav(favJSON).then(() => {
+                  setUpdatedStatus(false);
+                  navigation.goBack();
+                  Toast.show({
+                    type: "success",
+                    text1: "Successfully deleted.",
+                    position: "top",
+                    visibilityTime: 2000,
+                  });
                 });
               } else {
                 return;

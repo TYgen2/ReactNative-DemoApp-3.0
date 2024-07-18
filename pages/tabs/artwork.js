@@ -21,6 +21,7 @@ const Artwork = ({ route }) => {
   const [isGuest, setGuest] = useState(guest);
 
   const [artList, setArtList] = useState([]);
+  const [initialLoading, setInitialLoading] = useState(true);
   const { fetchTrigger, setFetchTrigger } = useContext(UpdateContext);
 
   const [totalPages, setTotalPages] = useState(0);
@@ -45,6 +46,11 @@ const Artwork = ({ route }) => {
   const fetchArts = async () => {
     const fetchCallable = httpsCallable(functions, "paginationFetch");
     fetchCallable({ page: currentPage, limit: PER_PAGE }).then(async (res) => {
+      // hiding the arrows button before initial fetch finished
+      if (initialLoading) {
+        setInitialLoading(false);
+      }
+
       // go to top for displaying the loading logo
       if (artList.length != 0) {
         toTop();
@@ -92,8 +98,9 @@ const Artwork = ({ route }) => {
   };
 
   useEffect(() => {
-    console.log("REFRESHINGGGGGGGGGGG");
-    totalArtCount().then(() => fetchArts());
+    totalArtCount().then(() => {
+      fetchArts();
+    });
   }, [currentPage, fetchTrigger]);
 
   return (
@@ -148,7 +155,7 @@ const Artwork = ({ route }) => {
           <TouchableOpacity
             style={[
               styles.arrowButton,
-              { opacity: currentPage === 1 ? 0.3 : 1 },
+              { opacity: initialLoading ? 0 : currentPage === 1 ? 0.3 : 1 },
             ]}
             disabled={currentPage === 1 ? true : false}
             onPress={() => {
@@ -163,7 +170,7 @@ const Artwork = ({ route }) => {
             style={[
               styles.arrowButton,
               {
-                opacity: currentPage === 1 ? 0.3 : 1,
+                opacity: initialLoading ? 0 : currentPage === 1 ? 0.3 : 1,
               },
             ]}
             disabled={currentPage === 1 ? true : false}
@@ -220,7 +227,11 @@ const Artwork = ({ route }) => {
             style={[
               styles.arrowButton,
               {
-                opacity: currentPage === totalPages ? 0.3 : 1,
+                opacity: initialLoading
+                  ? 0
+                  : currentPage === totalPages
+                  ? 0.3
+                  : 1,
               },
             ]}
             disabled={currentPage === totalPages ? true : false}
@@ -235,7 +246,13 @@ const Artwork = ({ route }) => {
           <TouchableOpacity
             style={[
               styles.arrowButton,
-              { opacity: currentPage === totalPages ? 0.3 : 1 },
+              {
+                opacity: initialLoading
+                  ? 0
+                  : currentPage === totalPages
+                  ? 0.3
+                  : 1,
+              },
             ]}
             disabled={currentPage === totalPages ? true : false}
             onPress={() => {
