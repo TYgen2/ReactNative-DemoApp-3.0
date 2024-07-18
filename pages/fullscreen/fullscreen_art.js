@@ -164,8 +164,18 @@ const Fullscreen = ({ route }) => {
 
         {/* fullscreen of art */}
         {isLoading ? (
-          <View style={{ flex: 1, justifyContent: "center" }}>
-            <ActivityIndicator size="large" color="#483C32" />
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              paddingBottom: 50,
+            }}
+          >
+            <Image
+              source={require("../../assets/kurukuru.gif")}
+              style={{ width: 150, height: 150 }}
+            />
           </View>
         ) : (
           <ImageZoom

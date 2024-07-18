@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Image,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -64,9 +65,14 @@ const Random = ({ route }) => {
             style={{
               flex: 1,
               justifyContent: "center",
+              alignItems: "center",
+              paddingRight: 20,
             }}
           >
-            <ActivityIndicator size="large" color="#483C32" />
+            <Image
+              source={require("../assets/kurukuru.gif")}
+              style={{ width: 150, height: 150 }}
+            />
           </View>
         ) : (
           <ArtItem

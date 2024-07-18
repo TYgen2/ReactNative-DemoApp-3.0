@@ -182,10 +182,14 @@ const UserProfile = ({ route }) => {
                 flex: 1,
                 justifyContent: "center",
                 alignItems: "center",
+                paddingBottom: 50,
               }}
             >
               {fetchUploadedLoading ? (
-                <ActivityIndicator size="large" color="#483C32" />
+                <Image
+                  source={require("../assets/kurukuru.gif")}
+                  style={{ width: 100, height: 100 }}
+                />
               ) : (
                 <Text style={[styles.empty, { color: colors.title }]}>
                   This user hasn't post any art
