@@ -45,6 +45,7 @@ const Fullscreen = ({ route }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [artInfo, setArtInfo] = useState();
   const { fetchTrigger, setFetchTrigger } = useContext(UpdateContext);
+  const [donwloading, setDownloading] = useState(false);
 
   const myUser = user === artistId ? true : false;
 
@@ -73,7 +74,7 @@ const Fullscreen = ({ route }) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={{ flex: 1 }}
+        style={{ flex: 1, opacity: donwloading ? 0.4 : 1 }}
         activeOpacity={1}
         onPress={() => {
           setShowExtra(!showExtra);
@@ -191,12 +192,32 @@ const Fullscreen = ({ route }) => {
           />
         )}
       </TouchableOpacity>
-      <View style={styles.buttonContainer}>
+      {/* Downloading indicator */}
+      {donwloading && (
+        <ActivityIndicator
+          size={100}
+          color="gray"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            margin: "auto",
+          }}
+        />
+      )}
+      <View
+        style={[styles.buttonContainer, { opacity: donwloading ? 0.4 : 1 }]}
+      >
         {/* save to local button */}
         <TouchableOpacity
           style={[styles.button, { opacity: showExtra && !isLoading ? 1 : 0 }]}
           disabled={showExtra ? false : true}
-          onPress={() => saveImg(imgUrl, artworkId)}
+          onPress={() => {
+            setDownloading(true);
+            saveImg(imgUrl, artworkId).then(() => setDownloading(false));
+          }}
         >
           <Icon name="download" type="material" color="black" size={24} />
         </TouchableOpacity>

@@ -108,7 +108,7 @@ const artItem = ({
       <TouchableOpacity
         style={styles.arts}
         activeOpacity={0.8}
-        onLongPress={() => {
+        onPress={() => {
           navigation.navigate("Full art", {
             user: userId,
             artistId: "",
