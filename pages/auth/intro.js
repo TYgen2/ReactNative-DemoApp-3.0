@@ -16,7 +16,6 @@ import {
   signInWithCredential,
   FacebookAuthProvider,
 } from "firebase/auth";
-import { httpsCallable } from "firebase/functions";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import { createEmptyFav } from "../../services/fav";
@@ -29,9 +28,6 @@ WebBrowser.maybeCompleteAuthSession();
 
 const IntroPage = () => {
   const navigation = useNavigation();
-
-  // const getDocData = httpsCallable(functions, "getDocData");
-  // const authUserAdmin = httpsCallable(functions, "authUserAdmin");
 
   // Google sign in
   const [request, response, promptAsync] = Google.useAuthRequest({
@@ -110,17 +106,6 @@ const IntroPage = () => {
             ],
           });
         }
-
-        // const jwtoken = await user.getIdToken();
-
-        // authUserAdmin({ idToken: jwtoken })
-        //   .then((res) => {
-        //     console.log(res);
-        //     getDocData({ docId: res.data["uid"] }).then((res2) =>
-        //       console.log(res2.data["Info"])
-        //     );
-        //   })
-        //   .catch((e) => console.error(e, "You are not an authenticated user"));
       }
     });
 

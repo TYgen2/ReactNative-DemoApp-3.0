@@ -196,7 +196,7 @@ const Fullscreen = ({ route }) => {
         <TouchableOpacity
           style={[styles.button, { opacity: showExtra && !isLoading ? 1 : 0 }]}
           disabled={showExtra ? false : true}
-          onPress={() => saveImg(imgUrl, artFilename)}
+          onPress={() => saveImg(imgUrl, artworkId)}
         >
           <Icon name="download" type="material" color="black" size={24} />
         </TouchableOpacity>

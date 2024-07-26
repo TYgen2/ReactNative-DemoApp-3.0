@@ -47,7 +47,7 @@ export const saveImg = async (url, name) => {
     const { status } = await MediaLibrary.requestPermissionsAsync();
 
     if (status === "granted") {
-      const fileUri = FileSystem.documentDirectory + `${name}`;
+      const fileUri = FileSystem.documentDirectory + `${name}` + ".jpg";
       const res = await FileSystem.downloadAsync(url, fileUri);
 
       await MediaLibrary.saveToLibraryAsync(res.uri);
