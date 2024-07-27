@@ -12,7 +12,8 @@ DemoApp 3.0 is still under development.
 - [x] Password confirmation feature
 - [x] Hint for guest mode in the Intro page
 - [x] Profile initialization page right after registeration
-- [ ] other functions...
+- [ ] Comment section
+- [ ] Image description
 
 ## 📷Screenshots from app
 ### *I do not own any of the arts. This app is just for learning purpose.*
