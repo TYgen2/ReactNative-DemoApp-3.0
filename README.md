@@ -9,6 +9,9 @@ DemoApp 3.0 is still under development.
 - [x] Artwork Pagination
 - [x] Random function remake
 - [x] Search function remake using Algolia extension
+- [x] Password confirmation feature
+- [x] Hint for guest mode in the Intro page
+- [x] Profile initialization page right after registeration
 - [ ] other functions...
 
 ## 📷Screenshots from app
