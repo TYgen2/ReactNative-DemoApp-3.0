@@ -248,8 +248,8 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   signature: {
-    fontSize: 14,
-    fontStyle: "italic",
+    fontSize: 20,
+    fontFamily: "Caveat-VariableFont_wght",
   },
   empty: {
     fontSize: 24,

@@ -8,17 +8,21 @@ import {
 } from "react-native";
 import React, { useState } from "react";
 import { handleSignUp } from "../../services/auth";
+import { NotifyMessage } from "../../utils/tools";
 
 const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
 
   const [isEmailInputFocused, setEmailInputFocused] = useState(false);
   const [isPasswordInputFocused, setPasswordInputFocused] = useState(false);
+  const [isConfirmInputFocused, setConfirmInputFocused] = useState(false);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.inputContainer}>
+        {/* email input */}
         <TextInput
           value={email}
           placeholder="Email"
@@ -36,6 +40,8 @@ const Register = () => {
           onSubmitEditing={() => setEmailInputFocused(false)}
           onEndEditing={() => setEmailInputFocused(false)}
         />
+
+        {/* password input */}
         <TextInput
           value={password}
           placeholder="Password"
@@ -54,9 +60,39 @@ const Register = () => {
           onSubmitEditing={() => setPasswordInputFocused(false)}
           onEndEditing={() => setPasswordInputFocused(false)}
         />
+        <Text style={styles.reminder}>
+          * Password length must be longer than 6 characters
+        </Text>
+
+        {/* confirm password input */}
+        <TextInput
+          value={confirm}
+          placeholder="Confirm Password"
+          style={[
+            styles.input,
+            {
+              borderColor:
+                isConfirmInputFocused == true ? "#967969" : "transparent",
+              borderWidth: isConfirmInputFocused == true ? 2 : 0,
+              fontWeight: confirm === "" ? "bold" : "normal",
+            },
+          ]}
+          onChangeText={(text) => setConfirm(text)}
+          secureTextEntry
+          onFocus={() => setConfirmInputFocused(true)}
+          onSubmitEditing={() => setConfirmInputFocused(false)}
+          onEndEditing={() => setConfirmInputFocused(false)}
+        />
+
         <TouchableOpacity
           style={styles.buttonContainer}
-          onPress={() => handleSignUp(email, password)}
+          onPress={() => {
+            if (password === confirm) {
+              handleSignUp(email, password);
+            } else {
+              NotifyMessage("Passwords do not match!");
+            }
+          }}
         >
           <Text style={styles.buttonText}>Register</Text>
         </TouchableOpacity>
@@ -98,5 +134,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
     paddingBottom: 2,
+  },
+  reminder: {
+    marginHorizontal: 40,
+    color: "grey",
+    fontSize: 12,
   },
 });

@@ -10,6 +10,7 @@ import { ArtContextProvider } from "../context/updateArt";
 import changeName from "../pages/auth/changeName";
 import ChangeName from "../pages/auth/changeName";
 import Welcome from "../pages/welcome";
+import EditProfile from "../pages/auth/editProfile";
 
 const Stack = createStackNavigator();
 
@@ -41,6 +42,17 @@ const NavStack = () => {
             headerShown: true,
             headerTransparent: true,
             title: "What's your artist name 🖊 ?",
+            headerLeft: false,
+            headerTitleAlign: "center",
+          }}
+        />
+        <Stack.Screen
+          name="Edit profile"
+          component={EditProfile}
+          options={{
+            headerShown: true,
+            headerTransparent: true,
+            title: "Edit your profile info 😎",
             headerLeft: false,
             headerTitleAlign: "center",
           }}

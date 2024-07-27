@@ -11,6 +11,7 @@ import React, { useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { EditName } from "../../services/fav";
 import { Capitalize } from "../../utils/tools";
+import { Icon } from "@rneui/themed";
 
 const ChangeName = ({ route, navigation }) => {
   const [name, setName] = useState("");
@@ -94,11 +95,14 @@ const ChangeName = ({ route, navigation }) => {
             EditName(user, name);
             navigation.reset({
               index: 0,
-              routes: [{ name: "Welcome", params: { newUser: true } }],
+              routes: [
+                { name: "Edit profile", params: { user: user, name: name } },
+              ],
             });
           }}
         >
-          <Text style={styles.buttonText}>Register</Text>
+          <Text style={styles.buttonText}>Next</Text>
+          <Icon name="arrow-forward" size={20} />
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -154,16 +158,17 @@ const styles = StyleSheet.create({
     marginHorizontal: 40,
   },
   buttonContainer: {
+    flexDirection: "row",
     width: 90,
     marginTop: 25,
     borderRadius: 50,
     padding: 10,
     backgroundColor: "#C4A484",
     alignSelf: "center",
+    justifyContent: "space-evenly",
   },
   buttonText: {
     fontWeight: "bold",
-    textAlign: "center",
     paddingBottom: 2,
   },
 });

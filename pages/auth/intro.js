@@ -174,6 +174,20 @@ const IntroPage = () => {
               />
             </TouchableOpacity>
           </View>
+          <View style={styles.reminderView}>
+            <Text style={styles.reminder}>
+              Lazy for signing up?{"\n"}Try out the guest mode!{" "}
+            </Text>
+            <Image
+              style={{
+                height: 40,
+                width: 40,
+                bottom: 30,
+                transform: [{ rotate: "-30deg" }],
+              }}
+              source={require("../../assets/arrow.png")}
+            />
+          </View>
         </View>
       </View>
     </View>
@@ -244,5 +258,19 @@ const styles = StyleSheet.create({
     height: 50,
     marginHorizontal: 20,
     borderRadius: 50,
+  },
+  reminderView: {
+    flexDirection: "row",
+    top: 40,
+    paddingLeft: 40,
+  },
+  reminder: {
+    fontFamily: "Caveat-VariableFont_wght",
+    textAlign: "center",
+    fontSize: 20,
+    backgroundColor: "#EADDCA",
+    borderRadius: 20,
+    padding: 6,
+    transform: [{ rotate: "-10deg" }],
   },
 });
