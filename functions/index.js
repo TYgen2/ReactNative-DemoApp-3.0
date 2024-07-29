@@ -118,7 +118,8 @@ exports.uploadMetadata = onCall(async (req) => {
     throw new HttpsError("failed-precondition", "CANT FKING UPLOAD METADATA");
   }
 
-  const { artFilename, artName, artist, artistId, imgUrl } = req.data;
+  const { artFilename, artName, artist, artistId, artDescription, imgUrl } =
+    req.data;
 
   try {
     const res = await db.collection("illustrations").add({
@@ -127,6 +128,7 @@ exports.uploadMetadata = onCall(async (req) => {
       artName: artName,
       artist: artist,
       artistId: artistId,
+      artDescription: artDescription,
       imgUrl: imgUrl,
       likes: 0,
       uploadedTime: new Date(),

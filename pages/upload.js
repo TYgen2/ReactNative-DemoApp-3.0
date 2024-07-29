@@ -114,10 +114,13 @@ const Upload = ({ route }) => {
   const [selectedAR, setSelectedAR] = useState("3:4");
   const [arDone, setArDone] = useState(false);
 
-  const [artName, setArtName] = useState("");
   const [artist, setArtist] = useState("");
 
+  const [artName, setArtName] = useState("");
+  const [artDesc, setArtDesc] = useState("");
+
   const [isArtNameInputFocused, setArtNameInputFocused] = useState(false);
+  const [isArtDescInputFocused, setArtDescInputFocused] = useState(false);
 
   const ASPECT_RATIO = {
     "3:4": [192, 256],
@@ -253,7 +256,7 @@ const Upload = ({ route }) => {
   };
 
   // upload images
-  const uploadArt = async (name, artist) => {
+  const uploadArt = async (name, artist, desc) => {
     setUploading(true);
 
     try {
@@ -286,6 +289,7 @@ const Upload = ({ route }) => {
                 artName: Uncapitalize(name),
                 artist: Uncapitalize(artist),
                 artistId: userId,
+                artDescription: desc,
                 imgUrl: url,
               };
               // after upload the art metadata to Firestore illustrations,
@@ -316,6 +320,7 @@ const Upload = ({ route }) => {
   const reset = () => {
     setCropped(false);
     setArtName("");
+    setArtDesc("");
     debugPreview();
     setImage(null);
     setUploaded(false);
@@ -482,7 +487,7 @@ const Upload = ({ route }) => {
                     style={[
                       {
                         position: "absolute",
-                        bottom: 140,
+                        bottom: 90,
                         width: windowWidth + 40,
                       },
                       reanimatedTextInput,
@@ -507,16 +512,35 @@ const Upload = ({ route }) => {
                       onSubmitEditing={() => setArtNameInputFocused(false)}
                       onEndEditing={() => setArtNameInputFocused(false)}
                     />
+                    <TextInput
+                      value={artDesc}
+                      placeholder="art description"
+                      maxLength={24}
+                      autoCapitalize="none"
+                      style={[
+                        styles.input,
+                        {
+                          borderColor:
+                            isArtDescInputFocused == true ? "#967969" : "grey",
+                          borderWidth: isArtDescInputFocused == true ? 2 : 2,
+                          fontWeight: artDesc === "" ? "bold" : "normal",
+                        },
+                      ]}
+                      onChangeText={(text) => setArtDesc(text.toLowerCase())}
+                      onFocus={() => setArtDescInputFocused(true)}
+                      onSubmitEditing={() => setArtDescInputFocused(false)}
+                      onEndEditing={() => setArtDescInputFocused(false)}
+                    />
                     {/* publish button */}
                     <TouchableOpacity
                       style={[
                         styles.publish,
-                        { opacity: artName === "" ? 0 : 1 },
+                        { opacity: artName === "" || artDesc === "" ? 0 : 1 },
                       ]}
                       onPress={() => {
-                        uploadArt(artName, artist);
+                        uploadArt(artName, artist, artDesc);
                       }}
-                      disabled={artName === "" ? true : false}
+                      disabled={artName === "" || artDesc === "" ? true : false}
                     >
                       <Icon
                         name="publish"
@@ -589,6 +613,7 @@ const Upload = ({ route }) => {
                 if (cropped) {
                   debug2Preview();
                   setArtName("");
+                  setArtDesc("");
                 } else {
                   debugPreview();
                   setImage(null);
@@ -682,7 +707,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     padding: 15,
     position: "absolute",
-    bottom: -100,
+    bottom: -80,
   },
   uploaded: {
     fontWeight: "bold",

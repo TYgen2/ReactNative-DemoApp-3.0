@@ -25,7 +25,7 @@ const Random = ({ route }) => {
     min = Math.ceil(min);
     max = Math.floor(max);
 
-    return Math.floor(Math.random() * (max - min)) + min;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   };
 
   // make use of the pagination fetch, to generate a random
@@ -37,6 +37,11 @@ const Random = ({ route }) => {
     setRanLoading((prev) => true);
     totalCallable({}).then((res) => {
       const totalArts = res.data["data"];
+
+      if (totalArts === 0) {
+        return;
+      }
+
       const randomPage = getRandomInteger(1, totalArts);
 
       fetchCallable({ page: randomPage, limit: 1 })
@@ -50,7 +55,6 @@ const Random = ({ route }) => {
   };
 
   useEffect(() => {
-    console.log("RANDOM!!!!");
     fetchRandomArt();
   }, [fetchTrigger]);
 

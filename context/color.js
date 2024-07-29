@@ -8,6 +8,7 @@ export const lightColors = {
   invertedText: "white",
   pageButton: "#F0FFFF",
   borderColor: "#CCCCFF",
+  fullscreenExtra: "rgba(255, 255, 255, 0.9)",
 };
 
 export const darkColors = {
@@ -20,4 +21,5 @@ export const darkColors = {
   invertedText: "black",
   pageButton: "black",
   borderColor: "#483C32",
+  fullscreenExtra: "rgba(0, 0, 0, 0.9)",
 };

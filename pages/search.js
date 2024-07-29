@@ -6,23 +6,35 @@ import {
   TextInput,
   View,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useTheme } from "../context/themeProvider";
 import SearchItem from "../components/searchItem";
 import { Icon } from "@rneui/themed";
 import { GetHeaderHeight } from "../utils/tools";
 import { useSearchBox, useInfiniteHits } from "react-instantsearch-core";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../firebaseConfig";
+import { UpdateContext } from "../context/updateArt";
 
 const Search = ({ route }) => {
   const { colors } = useTheme();
   const { guest } = route.params;
 
   const [isLoading, setIsLoading] = useState(true);
-  const [hitsInitialized, setHitsInitialized] = useState(false);
+  const [artList, setArtList] = useState([]);
+  const { fetchTrigger, setFetchTrigger } = useContext(UpdateContext);
 
   const { query, refine } = useSearchBox();
   const [inputValue, setInputValue] = useState(query);
   const inputRef = useRef(null);
+
+  const fetchArts = async () => {
+    const fetchCallable = httpsCallable(functions, "paginationFetch");
+    fetchCallable({ page: 1, limit: 10 }).then(async (res) => {
+      setArtList(res.data["data"]);
+      setIsLoading(false);
+    });
+  };
 
   const setQuery = (newQuery) => {
     setInputValue(newQuery);
@@ -50,11 +62,8 @@ const Search = ({ route }) => {
   );
 
   useEffect(() => {
-    if (hits.length > 0 && !hitsInitialized) {
-      setIsLoading(false);
-      setHitsInitialized(true);
-    }
-  }, [hits, hitsInitialized]);
+    fetchArts();
+  }, [fetchTrigger]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -120,7 +129,7 @@ const Search = ({ route }) => {
               )}
             </View>
           }
-          data={hits}
+          data={query === "" ? artList : hits}
           overScrollMode="never"
           renderItem={renderItem}
           onEndReached={() => {
