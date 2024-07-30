@@ -5,7 +5,14 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from "react-native";
-import { React, useContext, useEffect, useRef, useState } from "react";
+import {
+  React,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { FlatList } from "react-native-gesture-handler";
 import ArtItem from "../../components/artItem";
 import { useTheme } from "../../context/themeProvider";
@@ -48,6 +55,7 @@ const Artwork = ({ route }) => {
     fetchCallable({ page: currentPage, limit: PER_PAGE }).then(async (res) => {
       if (initialLoading) {
         setInitialLoading(false);
+        setFetchTrigger(false);
       }
 
       // go to top for displaying the loading logo
@@ -62,21 +70,24 @@ const Artwork = ({ route }) => {
     });
   };
 
-  const renderItem = ({ item }) => (
-    <ArtItem
-      user={user}
-      guest={isGuest}
-      width={300}
-      left={20}
-      top={12}
-      bottom={16}
-      artworkId={item["artworkID"]}
-      artFilename={item["artFilename"]}
-      artName={item["artName"]}
-      artist={item["artist"]}
-      artistId={item["artistId"]}
-      imgUrl={item["imgUrl"]}
-    />
+  const renderItem = useCallback(
+    ({ item }) => (
+      <ArtItem
+        user={user}
+        guest={isGuest}
+        width={300}
+        left={20}
+        top={12}
+        bottom={16}
+        artworkId={item["artworkID"]}
+        artFilename={item["artFilename"]}
+        artName={item["artName"]}
+        artist={item["artist"]}
+        artistId={item["artistId"]}
+        imgUrl={item["imgUrl"]}
+      />
+    ),
+    []
   );
 
   const displayPage = (currentPage) => {
@@ -157,7 +168,7 @@ const Artwork = ({ route }) => {
               styles.arrowButton,
               {
                 opacity:
-                  totalPages === 1 || initialLoading
+                  totalPages === 0 || initialLoading
                     ? 0
                     : currentPage === 1
                     ? 0.3
@@ -178,7 +189,7 @@ const Artwork = ({ route }) => {
               styles.arrowButton,
               {
                 opacity:
-                  totalPages === 1 || initialLoading
+                  totalPages === 0 || initialLoading
                     ? 0
                     : currentPage === 1
                     ? 0.3
@@ -240,7 +251,7 @@ const Artwork = ({ route }) => {
               styles.arrowButton,
               {
                 opacity:
-                  totalPages === 1 || initialLoading
+                  totalPages === 0 || initialLoading
                     ? 0
                     : currentPage === totalPages
                     ? 0.3
@@ -261,7 +272,7 @@ const Artwork = ({ route }) => {
               styles.arrowButton,
               {
                 opacity:
-                  totalPages === 1 || initialLoading
+                  totalPages === 0 || initialLoading
                     ? 0
                     : currentPage === totalPages
                     ? 0.3

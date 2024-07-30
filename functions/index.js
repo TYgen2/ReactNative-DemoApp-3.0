@@ -5,6 +5,7 @@ admin.initializeApp({
 const db = admin.firestore();
 const storage = admin.storage();
 const bucket = storage.bucket("gs://rn-demoapp2.appspot.com");
+const { v4: uuidv4 } = require("uuid");
 
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { FieldValue } = require("firebase-admin/firestore");
@@ -95,6 +96,125 @@ exports.handleFavAndLikes = onCall(async (req) => {
   }
 });
 
+exports.addComment = onCall(async (req) => {
+  if (!req.auth) {
+    throw new HttpsError("failed-precondition", "CANT FKING COMMENT");
+  }
+
+  const { userId, comment, artworkId } = req.data;
+
+  try {
+    await db
+      .collection("illustrations")
+      .doc(artworkId)
+      .update({
+        comments: FieldValue.arrayUnion({
+          userId,
+          comment,
+          commentID: uuidv4(),
+          createdTime: new Date(),
+          likeCount: 0,
+        }),
+      });
+  } catch (error) {
+    console.error(error);
+    return { status: 500, message: "Error adding to comments" };
+  }
+});
+
+exports.getComment = onCall(async (req) => {
+  if (!req.auth) {
+    throw new HttpsError("failed-precondition", "CANT FKING FETCH COMMENT");
+  }
+
+  const { artworkId, userId } = req.data;
+
+  const getUserInfo = async (userID) => {
+    const snapshot = await db.collection("user").doc(userID).get();
+    return snapshot.data()["Info"];
+  };
+
+  const getCommentLikeStatus = async (userID, commentID) => {
+    const snapshot = await db
+      .collection("illustrations")
+      .doc(artworkId)
+      .collection("likes")
+      .doc(commentID)
+      .get();
+
+    if (!snapshot.exists) {
+      return false;
+    }
+
+    return snapshot.data()["likedBy"].includes(userID);
+  };
+
+  try {
+    const snapshotFromIll = await db
+      .collection("illustrations")
+      .doc(artworkId)
+      .get();
+    const commentData = snapshotFromIll.data()["comments"];
+
+    // handling promise for commenterData
+    const commenterDataPromises = commentData.map((comment) =>
+      getUserInfo(comment.userId)
+    );
+    const commenterDatas = await Promise.all(commenterDataPromises);
+
+    // handling promise for favStatus
+    const favDataPromises = commentData.map((comment) =>
+      getCommentLikeStatus(userId, comment.commentID)
+    );
+    const favDatas = await Promise.all(favDataPromises);
+
+    const result = commentData.map((comment, index) => ({
+      ...comment,
+      commenterData: commenterDatas[index],
+      favStatus: favDatas[index],
+    }));
+
+    return { status: 200, data: result };
+  } catch (error) {
+    return { status: 500, error: error.message };
+  }
+});
+
+exports.likeComment = onCall(async (req) => {
+  if (!req.auth) {
+    throw new HttpsError("failed-precondition", "CANT FKING COMMENT");
+  }
+
+  const { userId, commentId, artworkId, favStatus } = req.data;
+
+  const target = db
+    .collection("illustrations")
+    .doc(artworkId)
+    .collection("likes")
+    .doc(commentId);
+
+  try {
+    target.get().then(async (doc) => {
+      // docs exist
+      if (doc.data()) {
+        await target.update({
+          likedBy: favStatus
+            ? FieldValue.arrayRemove(userId)
+            : FieldValue.arrayUnion(userId),
+        });
+      } else {
+        // docs not yet exist, create new one
+        await target.set({
+          likedBy: [userId],
+        });
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    return { status: 500, message: "Error creating liked comment docs" };
+  }
+});
+
 // fetch art metadata when in Fullscreen **WORKING NOW, DONT FKING TOUCH**
 exports.fetchMetdata = onCall(async (req) => {
   if (!req.auth) {
@@ -129,6 +249,7 @@ exports.uploadMetadata = onCall(async (req) => {
       artist: artist,
       artistId: artistId,
       artDescription: artDescription,
+      comments: [],
       imgUrl: imgUrl,
       likes: 0,
       uploadedTime: new Date(),
@@ -136,6 +257,7 @@ exports.uploadMetadata = onCall(async (req) => {
 
     const docRef = db.collection("illustrations").doc(res.id);
     await docRef.update({ artworkId: res.id });
+
     return { status: 200, data: res.id };
   } catch (error) {
     console.error(error);
@@ -249,7 +371,15 @@ exports.deleteFromUploaded = onCall(async (req) => {
       });
 
     // delete target art in illustrations collection
-    await db.collection("illustrations").doc(artworkId).delete();
+    // await db.collection("illustrations").doc(artworkId).delete();
+
+    const illsutrationRef = db.collection("illustrations").doc(artworkId);
+    const likesRef = illsutrationRef.collection("likes");
+    const likesSnapshot = await likesRef.get();
+    likesSnapshot.forEach((likeDoc) => {
+      likeDoc.ref.delete();
+    });
+    await illsutrationRef.delete();
 
     // delete target art in Storage
     bucket.file(imgPath).delete((error) => {

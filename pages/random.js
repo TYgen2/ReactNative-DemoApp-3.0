@@ -85,7 +85,7 @@ const Random = ({ route }) => {
             width={undefined}
             left={0}
             top={24}
-            bottom={24}
+            bottom={18}
             artworkId={artList[0]["artworkID"]}
             artFilename={artList[0]["artFilename"]}
             artName={artList[0]["artName"]}

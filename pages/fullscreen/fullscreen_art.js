@@ -25,8 +25,10 @@ import { doc, getDoc } from "firebase/firestore";
 import { db, functions } from "../../firebaseConfig";
 import { ImageZoom } from "@likashefqet/react-native-image-zoom";
 import {
+  addComment,
   deleteFromUploaded,
   handleFavAndLikes,
+  likeComment,
 } from "../../services/cloudFunctions";
 import { httpsCallable } from "firebase/functions";
 import { getStorage, ref } from "firebase/storage";
@@ -40,9 +42,11 @@ import Animated, {
 import { useTheme } from "../../context/themeProvider";
 import BottomSheet, {
   BottomSheetFlatList,
+  BottomSheetTextInput,
   BottomSheetView,
   useBottomSheetTimingConfigs,
 } from "@gorhom/bottom-sheet";
+import CommentItem from "../../components/commentItem";
 
 const IGNORED_LOGS = [
   "Non-serializable values were found in the navigation state",
@@ -62,10 +66,13 @@ const Fullscreen = ({ route }) => {
   const [updatedStatus, setUpdatedStatus] = useState(fav);
   const [showExtra, setShowExtra] = useState(false);
   const [icon, setIcon] = useState("");
+  const [userIcon, setUserIcon] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [artInfo, setArtInfo] = useState();
   const { fetchTrigger, setFetchTrigger } = useContext(UpdateContext);
   const [donwloading, setDownloading] = useState(false);
+  const [comment, setComment] = useState("");
+  const [commentList, setCommentList] = useState();
 
   const myUser = user === artistId ? true : false;
 
@@ -88,10 +95,34 @@ const Fullscreen = ({ route }) => {
     });
   };
 
+  // fetch art comment in Firestore using CLOUD FUNCTION
+  const fetchComment = async () => {
+    const fetchMetaCallable = httpsCallable(functions, "getComment");
+    fetchMetaCallable({ artworkId: artworkId, userId: user }).then(
+      async (res) => {
+        setCommentList(res.data["data"]);
+      }
+    );
+  };
+
+  const getUserInfo = async () => {
+    const docRef = doc(db, "user", user);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      setUserIcon(docSnap.data()["Info"]["icon"]);
+    } else {
+      console.log("No such document!");
+    }
+  };
+
   useEffect(() => {
     fetchMetadata();
+    getUserInfo();
+    fetchComment();
   }, []);
 
+  // controlling the extra info view
   useEffect(() => {
     if (showExtra) {
       handleUpperExtra(0);
@@ -113,11 +144,8 @@ const Fullscreen = ({ route }) => {
   };
 
   const bottomSheetRef = useRef(null);
-  const snapPoints = useMemo(() => ["15%", "50%"], []);
+  const snapPoints = useMemo(() => ["15%", "60%"], []);
 
-  const handleSnapPress = useCallback((index) => {
-    bottomSheetRef.current?.snapToIndex(index);
-  }, []);
   const handleOpenPress = useCallback(() => {
     bottomSheetRef.current?.collapse();
   }, []);
@@ -129,6 +157,22 @@ const Fullscreen = ({ route }) => {
     duration: 300,
     easing: Easing.inOut(Easing.quad),
   });
+
+  const renderItem = useCallback(
+    ({ item }) => (
+      <CommentItem
+        createdTime={item["createdTime"]}
+        commenterIcon={item["commenterData"]["icon"]}
+        commenterName={item["commenterData"]["name"]}
+        commentFavStatus={item["favStatus"]}
+        commentID={item["commentID"]}
+        comment={item["comment"]}
+        user={user}
+        artworkId={artworkId}
+      />
+    ),
+    []
+  );
 
   return (
     <View
@@ -284,6 +328,7 @@ const Fullscreen = ({ route }) => {
         index={-1}
         handleIndicatorStyle={{ backgroundColor: colors.title }}
         enableOverDrag={false}
+        keyboardBlurBehavior="restore"
       >
         <BottomSheetView style={[styles.bottomSheet]}>
           <View style={{ flexDirection: "row", height: 100 }}>
@@ -378,6 +423,73 @@ const Fullscreen = ({ route }) => {
               )}
             </View>
           </View>
+
+          <View style={styles.lineBreak} />
+
+          {/* comment section */}
+          <Text style={[styles.commentTitle, { color: colors.title }]}>
+            Comments
+          </Text>
+          <View
+            style={{
+              flex: 5,
+              marginVertical: 10,
+              justifyContent: "flex-start",
+            }}
+          >
+            {/* <ActivityIndicator size="small" color="grey" /> */}
+            <BottomSheetFlatList data={commentList} renderItem={renderItem} />
+          </View>
+
+          {/* write comment */}
+          <View style={styles.commentInput}>
+            <Image
+              source={{ uri: isLoading ? "https://" : userIcon }}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 40,
+                marginLeft: 4,
+                backgroundColor: "green",
+              }}
+            />
+
+            <BottomSheetTextInput
+              style={{
+                flex: 1,
+                marginLeft: 4,
+                paddingVertical: 4,
+                color: "white",
+                borderBottomWidth: 1,
+                borderBottomColor: "grey",
+              }}
+              selectionColor="grey"
+              value={comment}
+              placeholder="Write your comments here..."
+              placeholderTextColor="grey"
+              onChangeText={(text) => setComment(text)}
+            />
+
+            <TouchableOpacity
+              onPress={() => {
+                const commentJSON = {
+                  userId: user,
+                  comment: comment,
+                  artworkId: artworkId,
+                };
+                addComment(commentJSON).then(() => {
+                  fetchComment();
+                  setComment("");
+                });
+              }}
+            >
+              <Icon
+                name="reply"
+                color="white"
+                style={{ paddingHorizontal: 6 }}
+              />
+            </TouchableOpacity>
+          </View>
         </BottomSheetView>
       </BottomSheet>
 
@@ -414,7 +526,7 @@ const styles = StyleSheet.create({
     backgroundColor: "pink",
     borderRadius: 50,
     justifyContent: "center",
-    right: 10,
+    right: 15,
     top: 45,
   },
   artistInfo: {
@@ -461,9 +573,36 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 20,
   },
+  commentTitle: {
+    fontWeight: "bold",
+    fontSize: 20,
+    paddingTop: 10,
+  },
   bottomRightBtns: {
     justifyContent: "center",
     borderRadius: 10,
     paddingVertical: 6,
+  },
+  lineBreak: {
+    borderBottomColor: "grey",
+    borderBottomWidth: 2,
+  },
+  commentInput: {
+    flex: 1,
+    backgroundColor: "#28282B",
+    borderWidth: 2,
+    borderColor: "white",
+    borderRadius: 10,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  comment: {
+    flex: 1,
+    borderBottomWidth: 1,
+    borderBottomColor: "grey",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
   },
 });

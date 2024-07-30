@@ -45,3 +45,23 @@ export const deleteFromUploaded = async (json) => {
     console.error(error);
   }
 };
+
+export const addComment = async (json) => {
+  const addCallable = httpsCallable(functions, "addComment");
+  try {
+    const res = await addCallable(json);
+    console.log("comment added successfully!");
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const likeComment = async (json) => {
+  const likeCallable = httpsCallable(functions, "likeComment");
+  try {
+    const res = await likeCallable(json);
+    console.log("comment liked successfully!");
+  } catch (error) {
+    console.error(error);
+  }
+};

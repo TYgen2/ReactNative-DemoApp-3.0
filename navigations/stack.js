@@ -7,7 +7,6 @@ import Fullscreen from "../pages/fullscreen/fullscreen_art";
 import UserProfile from "../pages/userProfile";
 import { useTheme } from "../context/themeProvider";
 import { ArtContextProvider } from "../context/updateArt";
-import changeName from "../pages/auth/changeName";
 import ChangeName from "../pages/auth/changeName";
 import Welcome from "../pages/welcome";
 import EditProfile from "../pages/auth/editProfile";
