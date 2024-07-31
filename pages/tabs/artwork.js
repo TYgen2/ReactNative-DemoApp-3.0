@@ -54,8 +54,8 @@ const Artwork = ({ route }) => {
     const fetchCallable = httpsCallable(functions, "paginationFetch");
     fetchCallable({ page: currentPage, limit: PER_PAGE }).then(async (res) => {
       if (initialLoading) {
+        setFetchTrigger(true);
         setInitialLoading(false);
-        setFetchTrigger(false);
       }
 
       // go to top for displaying the loading logo

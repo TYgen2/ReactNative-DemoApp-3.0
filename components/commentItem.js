@@ -2,6 +2,7 @@ import { Text, TouchableOpacity, Image, View, StyleSheet } from "react-native";
 import { likeComment } from "../services/cloudFunctions";
 import { Icon } from "@rneui/themed";
 import { useState } from "react";
+import { useTheme } from "../context/themeProvider";
 
 const CommentItem = ({
   createdTime,
@@ -15,6 +16,8 @@ const CommentItem = ({
 }) => {
   // get initial fav status from Firestore
   const [favStatus, setFavStatus] = useState(commentFavStatus);
+
+  const { colors } = useTheme();
 
   const time = new Date(createdTime._seconds * 1000);
   const now = new Date();
@@ -44,7 +47,7 @@ const CommentItem = ({
         >
           <Text
             style={{
-              color: "white",
+              color: colors.title,
               fontWeight: "bold",
             }}
           >
@@ -69,7 +72,7 @@ const CommentItem = ({
         </View>
         <Text
           style={{
-            color: "white",
+            color: colors.title,
             marginLeft: 4,
             marginRight: 20,
           }}

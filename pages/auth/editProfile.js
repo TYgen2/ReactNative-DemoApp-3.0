@@ -127,7 +127,9 @@ const EditProfile = ({ route, navigation }) => {
           EditSign(user, sign).then(() => {
             navigation.reset({
               index: 0,
-              routes: [{ name: "Welcome", params: { newUser: true } }],
+              routes: [
+                { name: "Welcome", params: { newUser: true, isGuest: false } },
+              ],
             });
           });
         }}
@@ -175,7 +177,9 @@ const EditProfile = ({ route, navigation }) => {
           onPress={() => {
             navigation.reset({
               index: 0,
-              routes: [{ name: "Welcome", params: { newUser: true } }],
+              routes: [
+                { name: "Welcome", params: { newUser: true, isGuest: false } },
+              ],
             });
           }}
         >
