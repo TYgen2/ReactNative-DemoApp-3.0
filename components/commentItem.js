@@ -67,7 +67,7 @@ const CommentItem = ({
               ? Math.floor(diffInSec / 60) + " minutes ago "
               : diffInSec >= 3600 && diffInSec < 86400
               ? Math.floor(diffInSec / 60 / 60) + " hours ago "
-              : Math.floor(diffInSec / 60 / 60 / 60) + " days ago"}
+              : Math.floor(diffInSec / 60 / 60 / 24) + " days ago"}
           </Text>
         </View>
         <Text

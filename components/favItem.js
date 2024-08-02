@@ -5,13 +5,15 @@ import {
   StyleSheet,
   Dimensions,
 } from "react-native";
-import { React } from "react";
+import { React, useContext } from "react";
 import { useNavigation } from "@react-navigation/native";
+import { UpdateContext } from "../context/updateArt";
 
 const windowWidth = Dimensions.get("window").width;
 
 export default FavItem = ({ userId, imgUrl, artworkId }) => {
   const navigation = useNavigation();
+  const { fetchTrigger, setFetchTrigger } = useContext(UpdateContext);
 
   return (
     <View style={styles.artList}>
@@ -24,7 +26,9 @@ export default FavItem = ({ userId, imgUrl, artworkId }) => {
             artworkId: artworkId,
             fav: true,
             imgUrl: imgUrl,
-            onGoBack: (updatedStatus) => {},
+            onGoBack: (updatedStatus, updatedLike) => {
+              setFetchTrigger(!fetchTrigger);
+            },
           });
         }}
       >

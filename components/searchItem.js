@@ -9,21 +9,22 @@ import {
 import { Capitalize } from "../utils/tools";
 import { useTheme } from "../context/themeProvider";
 import { useNavigation } from "@react-navigation/native";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
-import { auth, db } from "../firebaseConfig";
-import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db, functions } from "../firebaseConfig";
+import { useContext, useEffect, useState } from "react";
+import { httpsCallable } from "firebase/functions";
+import { UpdateContext } from "../context/updateArt";
 
 export default searchItem = ({
+  user,
   guest,
   artworkId,
-  artFilename,
   artName,
   artist,
   artistId,
   imgUrl,
 }) => {
   const navigation = useNavigation();
-  const userId = guest ? null : auth.currentUser.uid;
 
   const { colors } = useTheme();
 
@@ -31,10 +32,11 @@ export default searchItem = ({
   const [artistSign, setArtistSign] = useState("");
 
   const [status, setStatus] = useState(false);
-  const [iconLoading, setIconLoading] = useState(false);
+  const [iconLoading, setIconLoading] = useState(true);
+  const { fetchTrigger, setFetchTrigger, searchTrigger, setSearchTrigger } =
+    useContext(UpdateContext);
 
   const getInfo = async () => {
-    setIconLoading(true);
     const artistDocRef = doc(db, "user", artistId);
     const docSnap = await getDoc(artistDocRef);
 
@@ -44,43 +46,42 @@ export default searchItem = ({
     } else {
       console.log("No such document!");
     }
-    setIconLoading(false);
+
+    fetchFavAndLikes();
   };
 
-  if (!guest) {
-    const docRef = doc(db, "user", userId);
+  // get initial fav status from user Firestore FavArt
+  const fetchFavAndLikes = async () => {
+    const fetchCallable = httpsCallable(functions, "fetchFavAndLikes");
+    const checkFavStatus = (favData) => {
+      if (!favData) return false;
+      return favData.some((art) => art["imgUrl"] === imgUrl);
+    };
 
-    useEffect(() => {
-      getInfo();
-      const unsubscribe = onSnapshot(docRef, (doc) => {
-        getInfo();
-        if (doc.data()["FavArt"].some((e) => e["imgUrl"] === imgUrl)) {
-          setStatus(true);
-        } else {
-          setStatus(false);
-        }
-      });
+    fetchCallable({ userId: user, artworkId: artworkId, guest: guest })
+      .then((res) => {
+        setStatus(checkFavStatus(res.data["favData"]));
+      })
+      .then(() => setIconLoading(false));
+  };
 
-      return () => unsubscribe();
-    }, [imgUrl]);
-  } else {
-    useEffect(() => {
-      getInfo();
-    }, [imgUrl]);
-  }
+  useEffect(() => {
+    getInfo();
+  }, [searchTrigger, imgUrl]);
 
   return (
     <TouchableOpacity
       style={styles.itemContainer}
       onPress={() =>
         navigation.navigate("Full art", {
-          user: userId,
+          user: user,
           artistId: "",
           artworkId: artworkId,
           fav: status,
           imgUrl: imgUrl,
-          onGoBack: (updatedStatus) => {
+          onGoBack: (updatedStatus, updatedLike) => {
             setStatus(updatedStatus);
+            setFetchTrigger(!fetchTrigger);
           },
         })
       }
@@ -88,7 +89,7 @@ export default searchItem = ({
       <TouchableOpacity
         onPress={() => {
           navigation.push("Profile", {
-            user: userId,
+            user: user,
             guest: guest,
             artistId: artistId,
             name: artist,

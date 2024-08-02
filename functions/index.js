@@ -96,6 +96,36 @@ exports.handleFavAndLikes = onCall(async (req) => {
   }
 });
 
+exports.fetchFavAndLikes = onCall(async (req) => {
+  if (!req.auth) {
+    throw new HttpsError(
+      "failed-precondition",
+      "CANT FKING FETCH FAV AND LIKES DATA"
+    );
+  }
+
+  const { userId, artworkId, guest } = req.data;
+
+  let favData;
+
+  try {
+    if (!guest) {
+      const favSnapshot = await db.collection("user").doc(userId).get();
+      favData = favSnapshot.data()["FavArt"];
+    }
+
+    const likeSnapshot = await db
+      .collection("illustrations")
+      .doc(artworkId)
+      .get();
+    const likeData = likeSnapshot.data()["likes"];
+
+    return { status: 200, favData: favData, likeData: likeData };
+  } catch (error) {
+    return { status: 500, error: error.message };
+  }
+});
+
 exports.addComment = onCall(async (req) => {
   if (!req.auth) {
     throw new HttpsError("failed-precondition", "CANT FKING COMMENT");

@@ -137,7 +137,7 @@ const NavDrawer = ({ navigation, route }) => {
       <Drawer.Screen
         name="Search"
         component={Search}
-        initialParams={{ guest: isGuest }}
+        initialParams={{ user: userId, guest: isGuest }}
         options={{
           headerTintColor: colors.icon,
           headerTitleStyle: { color: colors.title },

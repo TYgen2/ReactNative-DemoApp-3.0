@@ -18,7 +18,7 @@ import { UpdateContext } from "../context/updateArt";
 
 const Search = ({ route }) => {
   const { colors } = useTheme();
-  const { guest } = route.params;
+  const { user, guest } = route.params;
 
   const [isLoading, setIsLoading] = useState(true);
   const [artList, setArtList] = useState([]);
@@ -51,9 +51,9 @@ const Search = ({ route }) => {
 
   const renderItem = ({ item }) => (
     <SearchItem
+      user={user}
       guest={guest}
       artworkId={item["artworkId"]}
-      artFilename={item["artFilename"]}
       artName={item["artName"]}
       artist={item["artist"]}
       artistId={item["artistId"]}

@@ -59,7 +59,7 @@ const storage = getStorage();
 const Fullscreen = ({ route }) => {
   const navigation = useNavigation();
   const { colors } = useTheme();
-  const { user, artworkId, fav, imgUrl, artistId } = route.params;
+  const { user, artworkId, fav, imgUrl, artistId, onGoBack } = route.params;
 
   // state for controlling fav icon, and responsible for passing the
   // most updated status back to artItem screen.
@@ -69,7 +69,8 @@ const Fullscreen = ({ route }) => {
   const [userIcon, setUserIcon] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [artInfo, setArtInfo] = useState();
-  const { fetchTrigger, setFetchTrigger } = useContext(UpdateContext);
+  const { fetchTrigger, setFetchTrigger, searchTrigger, setSearchTrigger } =
+    useContext(UpdateContext);
   const [donwloading, setDownloading] = useState(false);
   const [comment, setComment] = useState("");
   const [commentList, setCommentList] = useState();
@@ -254,8 +255,9 @@ const Fullscreen = ({ route }) => {
                     }
                   );
                   if (choice === "yes") {
+                    onGoBack(false, "minus");
+
                     handleFavAndLikes(handleJSON).then(() => {
-                      setUpdatedStatus(false);
                       navigation.goBack();
                       Toast.show({
                         type: "success",
@@ -270,10 +272,13 @@ const Fullscreen = ({ route }) => {
                 }
                 // not faved, fav now
                 else {
-                  handleFavAndLikes(handleJSON).then(() =>
-                    setUpdatedStatus(true)
-                  );
+                  setUpdatedStatus(true);
+                  onGoBack(true, "plus");
+
+                  handleFavAndLikes(handleJSON);
                 }
+                // update search page fav status
+                setSearchTrigger(!searchTrigger);
               }}
             >
               <Icon

@@ -6,21 +6,19 @@ import {
   Dimensions,
   Text,
   ActivityIndicator,
-  BackHandler,
 } from "react-native";
-import { React, useCallback, useContext, useEffect, useState } from "react";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { db } from "../firebaseConfig";
-import { doc, onSnapshot } from "firebase/firestore";
+import { React, useContext, useEffect, useState } from "react";
+import { useNavigation } from "@react-navigation/native";
+import { functions } from "../firebaseConfig";
 import { getStorage, ref } from "firebase/storage";
 import AlertAsync from "react-native-alert-async";
 import { Icon } from "@rneui/themed";
 import { UpdateContext } from "../context/updateArt";
 import Toast from "react-native-toast-message";
 import { deleteFromUploaded } from "../services/cloudFunctions";
+import { httpsCallable } from "firebase/functions";
 
 const windowWidth = Dimensions.get("window").width;
-
 const storage = getStorage();
 
 const UploadItem = ({ imgUrl, artworkId, guest, user, artistId }) => {
@@ -29,46 +27,33 @@ const UploadItem = ({ imgUrl, artworkId, guest, user, artistId }) => {
   const [likes, setLikes] = useState();
   const [likeLoading, setLikeLoading] = useState(true);
 
-  const [deleteMode, setDeleteMode] = useState(false);
-
   const { fetchTrigger, setFetchTrigger } = useContext(UpdateContext);
 
-  // load like status from Firestore
-  if (!guest) {
-    const docRef = doc(db, "user", user);
-    useEffect(() => {
-      const unsubscribe = onSnapshot(docRef, (doc) => {
-        if (doc.data()["FavArt"].some((e) => e["imgUrl"] === imgUrl)) {
-          setStatus(true);
-        } else {
-          setStatus(false);
-        }
-      });
-      return () => {
-        unsubscribe();
-      };
-    }, []);
-  }
+  // get initial fav status from user Firestore FavArt
+  const fetchFavAndLikes = async () => {
+    const fetchCallable = httpsCallable(functions, "fetchFavAndLikes");
+    const checkFavStatus = (favData) => {
+      if (!favData) return false;
+      return favData.some((art) => art["imgUrl"] === imgUrl);
+    };
+
+    fetchCallable({ userId: user, artworkId: artworkId, guest: guest })
+      .then((res) => {
+        setLikes(res.data["likeData"]);
+        setStatus(checkFavStatus(res.data["favData"]));
+      })
+      .then(() => setLikeLoading(false));
+  };
 
   // load likes count from Firestore
   useEffect(() => {
-    const artRef = doc(db, "illustrations", artworkId);
-    const unsubscribe = onSnapshot(artRef, (doc) => {
-      if (doc.exists()) {
-        setLikeLoading(true);
-        setLikes(doc.data()["likes"]);
-        setLikeLoading(false);
-      }
-    });
-    return () => {
-      unsubscribe();
-    };
+    fetchFavAndLikes();
   }, []);
 
   return (
     <View style={styles.artList}>
       <TouchableOpacity
-        style={{ flex: 1, opacity: deleteMode ? 0.4 : 1 }}
+        style={{ flex: 1 }}
         activeOpacity={0.8}
         onPress={() => {
           navigation.navigate("Full art", {
@@ -77,7 +62,11 @@ const UploadItem = ({ imgUrl, artworkId, guest, user, artistId }) => {
             artworkId: artworkId,
             fav: status,
             imgUrl: imgUrl,
-            onGoBack: (updatedStatus) => {},
+            onGoBack: (updatedStatus, updatedLike) => {
+              setStatus(updatedStatus);
+              setLikes(updatedLike === "minus" ? likes - 1 : likes + 1);
+              setFetchTrigger(!fetchTrigger);
+            },
           });
         }}
       >

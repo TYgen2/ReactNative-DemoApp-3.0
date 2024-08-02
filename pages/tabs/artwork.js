@@ -80,7 +80,6 @@ const Artwork = ({ route }) => {
         top={12}
         bottom={16}
         artworkId={item["artworkID"]}
-        artFilename={item["artFilename"]}
         artName={item["artName"]}
         artist={item["artist"]}
         artistId={item["artistId"]}
