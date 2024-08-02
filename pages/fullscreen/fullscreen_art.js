@@ -165,7 +165,7 @@ const Fullscreen = ({ route }) => {
         createdTime={item["createdTime"]}
         commenterIcon={item["commenterData"]["icon"]}
         commenterName={item["commenterData"]["name"]}
-        commentFavStatus={item["favStatus"]}
+        commentFavData={item["favData"]}
         commentID={item["commentID"]}
         comment={item["comment"]}
         user={user}

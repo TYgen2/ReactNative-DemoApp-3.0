@@ -12,28 +12,6 @@ const { FieldValue } = require("firebase-admin/firestore");
 
 /*TO TEST onCall functions in Postman, must use POST method*/
 
-// fetch 10 initial arts shown in search page **WORKING NOW, DONT FKING TOUCH**
-exports.fetchArts = onCall(async (req) => {
-  if (!req.auth) {
-    throw new HttpsError("failed-precondition", "CANT FKING FETCH ARTS");
-  }
-
-  try {
-    const snapshot = await db
-      .collection("illustrations")
-      .orderBy("uploadedTime", "desc")
-      .limit(10)
-      .get();
-    const userData = snapshot.docs.map((doc) => ({
-      artworkID: doc.id,
-      ...doc.data(),
-    }));
-    return { status: 200, data: userData };
-  } catch (error) {
-    return { status: 500, error: error.message };
-  }
-});
-
 // save to / delete from FavArt in Firestore, like counter for each art
 // **WORKING NOW, DONT FKING TOUCH**
 exports.handleFavAndLikes = onCall(async (req) => {
@@ -143,7 +121,6 @@ exports.addComment = onCall(async (req) => {
           comment,
           commentID: uuidv4(),
           createdTime: new Date(),
-          likeCount: 0,
         }),
       });
   } catch (error) {
@@ -165,6 +142,9 @@ exports.getComment = onCall(async (req) => {
   };
 
   const getCommentLikeStatus = async (userID, commentID) => {
+    let status = false;
+    let count = 0;
+
     const snapshot = await db
       .collection("illustrations")
       .doc(artworkId)
@@ -173,10 +153,13 @@ exports.getComment = onCall(async (req) => {
       .get();
 
     if (!snapshot.exists) {
-      return false;
+      return { status, count };
     }
 
-    return snapshot.data()["likedBy"].includes(userID);
+    status = snapshot.data()["likedBy"].includes(userID);
+    count = snapshot.data()["likedBy"].length;
+
+    return { status, count };
   };
 
   try {
@@ -201,7 +184,7 @@ exports.getComment = onCall(async (req) => {
     const result = commentData.map((comment, index) => ({
       ...comment,
       commenterData: commenterDatas[index],
-      favStatus: favDatas[index],
+      favData: favDatas[index],
     }));
 
     return { status: 200, data: result };
@@ -217,6 +200,7 @@ exports.likeComment = onCall(async (req) => {
 
   const { userId, commentId, artworkId, favStatus } = req.data;
 
+  // create an instance to keep track the users who liked this comment
   const target = db
     .collection("illustrations")
     .doc(artworkId)

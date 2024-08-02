@@ -1,21 +1,22 @@
 import { Text, TouchableOpacity, Image, View, StyleSheet } from "react-native";
 import { likeComment } from "../services/cloudFunctions";
 import { Icon } from "@rneui/themed";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTheme } from "../context/themeProvider";
 
 const CommentItem = ({
   createdTime,
   commenterIcon,
   commenterName,
-  commentFavStatus,
+  commentFavData,
   commentID,
   comment,
   user,
   artworkId,
 }) => {
   // get initial fav status from Firestore
-  const [favStatus, setFavStatus] = useState(commentFavStatus);
+  const [favStatus, setFavStatus] = useState(commentFavData["status"]);
+  const [likeCount, setLikeCount] = useState(commentFavData["count"]);
 
   const { colors } = useTheme();
 
@@ -80,27 +81,32 @@ const CommentItem = ({
           {comment}
         </Text>
       </View>
-      <TouchableOpacity
-        style={{ marginRight: 4 }}
-        onPress={() => {
-          const likeJSON = {
-            userId: user,
-            commentId: commentID,
-            artworkId: artworkId,
-            favStatus: favStatus,
-          };
-          likeComment(likeJSON).then(() => {
+      <View style={{ alignItems: "center", marginRight: 4 }}>
+        <Text style={styles.like}>{likeCount}</Text>
+        <TouchableOpacity
+          style={{}}
+          onPress={() => {
+            const likeJSON = {
+              userId: user,
+              commentId: commentID,
+              artworkId: artworkId,
+              favStatus: favStatus,
+            };
+
+            setLikeCount(favStatus ? likeCount - 1 : likeCount + 1);
             setFavStatus(!favStatus);
-          });
-        }}
-      >
-        <Icon
-          name={favStatus ? "heart" : "hearto"}
-          type="antdesign"
-          color={favStatus ? "#ff5152" : "grey"}
-          size={20}
-        />
-      </TouchableOpacity>
+
+            likeComment(likeJSON);
+          }}
+        >
+          <Icon
+            name={favStatus ? "heart" : "hearto"}
+            type="antdesign"
+            color={favStatus ? "#ff5152" : "grey"}
+            size={20}
+          />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -114,6 +120,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 10,
+  },
+  like: {
+    color: "grey",
+    fontSize: 12,
+    fontWeight: "bold",
+    paddingVertical: 2,
   },
 });
 

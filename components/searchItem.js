@@ -125,7 +125,13 @@ export default searchItem = ({
           {Capitalize(artist)}
         </Text>
       </View>
-      <Image source={{ uri: imgUrl }} style={{ flex: 2 }} />
+      {iconLoading ? (
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          <ActivityIndicator size="small" color="#483C32" />
+        </View>
+      ) : (
+        <Image source={{ uri: imgUrl }} style={{ flex: 2 }} />
+      )}
     </TouchableOpacity>
   );
 };
