@@ -1,22 +1,23 @@
 import { Text, TouchableOpacity, Image, View, StyleSheet } from "react-native";
 import { likeComment } from "../services/cloudFunctions";
 import { Icon } from "@rneui/themed";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTheme } from "../context/themeProvider";
 
 const CommentItem = ({
   createdTime,
   commenterIcon,
   commenterName,
-  commentFavData,
+  commentFavStatus,
+  commentLikeCount,
   commentID,
   comment,
   user,
   artworkId,
 }) => {
   // get initial fav status from Firestore
-  const [favStatus, setFavStatus] = useState(commentFavData["status"]);
-  const [likeCount, setLikeCount] = useState(commentFavData["count"]);
+  const [favStatus, setFavStatus] = useState(commentFavStatus);
+  const [likeCount, setLikeCount] = useState(commentLikeCount);
 
   const { colors } = useTheme();
 

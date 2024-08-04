@@ -28,7 +28,6 @@ import {
   addComment,
   deleteFromUploaded,
   handleFavAndLikes,
-  likeComment,
 } from "../../services/cloudFunctions";
 import { httpsCallable } from "firebase/functions";
 import { getStorage, ref } from "firebase/storage";
@@ -163,10 +162,11 @@ const Fullscreen = ({ route }) => {
     ({ item }) => (
       <CommentItem
         createdTime={item["createdTime"]}
-        commenterIcon={item["commenterData"]["icon"]}
-        commenterName={item["commenterData"]["name"]}
-        commentFavData={item["favData"]}
-        commentID={item["commentID"]}
+        commenterIcon={item["commentUserInfo"]["icon"]}
+        commenterName={item["commentUserInfo"]["name"]}
+        commentFavStatus={item["likeStatus"]}
+        commentLikeCount={item["likeCount"]}
+        commentID={item["commentId"]}
         comment={item["comment"]}
         user={user}
         artworkId={artworkId}

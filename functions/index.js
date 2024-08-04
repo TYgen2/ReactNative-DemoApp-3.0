@@ -5,7 +5,6 @@ admin.initializeApp({
 const db = admin.firestore();
 const storage = admin.storage();
 const bucket = storage.bucket("gs://rn-demoapp2.appspot.com");
-const { v4: uuidv4 } = require("uuid");
 
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { FieldValue } = require("firebase-admin/firestore");
@@ -112,17 +111,20 @@ exports.addComment = onCall(async (req) => {
   const { userId, comment, artworkId } = req.data;
 
   try {
-    await db
-      .collection("illustrations")
-      .doc(artworkId)
-      .update({
-        comments: FieldValue.arrayUnion({
-          userId,
-          comment,
-          commentID: uuidv4(),
-          createdTime: new Date(),
-        }),
-      });
+    const res = await db.collection("comments").add({
+      commentId: "",
+      commentUser: userId,
+      comment: comment,
+      artworkId: artworkId,
+      likeCount: 0,
+      likedBy: [],
+      createdTime: new Date(),
+    });
+
+    const docRef = db.collection("comments").doc(res.id);
+    await docRef.update({ commentId: res.id });
+
+    return { status: 200, message: "Created comment" };
   } catch (error) {
     console.error(error);
     return { status: 500, message: "Error adding to comments" };
@@ -141,53 +143,44 @@ exports.getComment = onCall(async (req) => {
     return snapshot.data()["Info"];
   };
 
-  const getCommentLikeStatus = async (userID, commentID) => {
-    let status = false;
-    let count = 0;
-
-    const snapshot = await db
-      .collection("illustrations")
-      .doc(artworkId)
-      .collection("likes")
-      .doc(commentID)
-      .get();
+  const checkIfUserHasLiked = async (commentId) => {
+    const commentRef = db.collection("comments").doc(commentId);
+    const snapshot = await commentRef.get();
 
     if (!snapshot.exists) {
-      return { status, count };
+      return false;
     }
 
-    status = snapshot.data()["likedBy"].includes(userID);
-    count = snapshot.data()["likedBy"].length;
-
-    return { status, count };
+    const likedByArray = snapshot.data()["likedBy"];
+    return likedByArray.includes(userId);
   };
 
   try {
-    const snapshotFromIll = await db
-      .collection("illustrations")
-      .doc(artworkId)
+    const commentsRef = db.collection("comments");
+    const querySnapshot = await commentsRef
+      .where("artworkId", "==", artworkId)
+      .orderBy("likeCount", "desc")
       .get();
-    const commentData = snapshotFromIll.data()["comments"];
 
-    // handling promise for commenterData
-    const commenterDataPromises = commentData.map((comment) =>
-      getUserInfo(comment.userId)
+    const comments = await Promise.all(
+      querySnapshot.docs.map(async (doc) => {
+        const { likedBy, commentUser, artworkId, ...rest } = doc.data();
+        const userInfo = await getUserInfo(commentUser);
+        const isLiked = await checkIfUserHasLiked(doc.id);
+
+        return {
+          ...rest,
+          commentUserInfo: {
+            name: userInfo.name,
+            icon: userInfo.icon,
+          },
+          likeStatus: isLiked,
+        };
+      })
     );
-    const commenterDatas = await Promise.all(commenterDataPromises);
 
-    // handling promise for favStatus
-    const favDataPromises = commentData.map((comment) =>
-      getCommentLikeStatus(userId, comment.commentID)
-    );
-    const favDatas = await Promise.all(favDataPromises);
-
-    const result = commentData.map((comment, index) => ({
-      ...comment,
-      commenterData: commenterDatas[index],
-      favData: favDatas[index],
-    }));
-
-    return { status: 200, data: result };
+    // Since we've fetched and constructed comments in the correct order, we can return them directly
+    return { status: 200, data: comments };
   } catch (error) {
     return { status: 500, error: error.message };
   }
@@ -198,31 +191,34 @@ exports.likeComment = onCall(async (req) => {
     throw new HttpsError("failed-precondition", "CANT FKING COMMENT");
   }
 
-  const { userId, commentId, artworkId, favStatus } = req.data;
-
-  // create an instance to keep track the users who liked this comment
-  const target = db
-    .collection("illustrations")
-    .doc(artworkId)
-    .collection("likes")
-    .doc(commentId);
-
+  const { userId, commentId, favStatus } = req.data;
   try {
-    target.get().then(async (doc) => {
-      // docs exist
-      if (doc.data()) {
-        await target.update({
+    const commentRef = db.collection("comments").doc(commentId);
+
+    await db
+      .runTransaction((transaction) => {
+        transaction.update(commentRef, {
+          likeCount: favStatus
+            ? FieldValue.increment(-1)
+            : FieldValue.increment(1),
+        });
+
+        transaction.update(commentRef, {
           likedBy: favStatus
             ? FieldValue.arrayRemove(userId)
             : FieldValue.arrayUnion(userId),
         });
-      } else {
-        // docs not yet exist, create new one
-        await target.set({
-          likedBy: [userId],
-        });
-      }
-    });
+
+        return new Promise((resolve) =>
+          resolve({
+            status: 200,
+            message: favStatus ? "comment cancelled liked!" : "comment liked!",
+          })
+        );
+      })
+      .then(() => console.log("UPDATED LIKE COUNT!!"));
+
+    return { status: 200, message: "Liked comment successfully!!" };
   } catch (error) {
     console.error(error);
     return { status: 500, message: "Error creating liked comment docs" };
@@ -263,7 +259,6 @@ exports.uploadMetadata = onCall(async (req) => {
       artist: artist,
       artistId: artistId,
       artDescription: artDescription,
-      comments: [],
       imgUrl: imgUrl,
       likes: 0,
       uploadedTime: new Date(),
