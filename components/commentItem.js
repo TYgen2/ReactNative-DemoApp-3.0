@@ -1,8 +1,14 @@
 import { Text, TouchableOpacity, Image, View, StyleSheet } from "react-native";
 import { likeComment } from "../services/cloudFunctions";
 import { Icon } from "@rneui/themed";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useTheme } from "../context/themeProvider";
+import { functions } from "../firebaseConfig";
+import { httpsCallable } from "firebase/functions";
+import { UpdateContext } from "../context/updateArt";
+import { sleep } from "../utils/tools";
+import AlertAsync from "react-native-alert-async";
+import Toast from "react-native-toast-message";
 
 const CommentItem = ({
   createdTime,
@@ -10,6 +16,7 @@ const CommentItem = ({
   commenterName,
   commentFavStatus,
   commentLikeCount,
+  commentUser,
   commentID,
   comment,
   user,
@@ -20,13 +27,52 @@ const CommentItem = ({
   const [likeCount, setLikeCount] = useState(commentLikeCount);
 
   const { colors } = useTheme();
+  const { commentTrigger, setCommentTrigger } = useContext(UpdateContext);
 
   const time = new Date(createdTime._seconds * 1000);
   const now = new Date();
   const diffInSec = Math.floor((now.getTime() - time.getTime()) / 1000) + 5;
 
+  // delete comment in Firestore using CLOUD FUNCTION
+  const deleteComment = async () => {
+    const fetchMetaCallable = httpsCallable(functions, "deleteComment");
+    fetchMetaCallable({ commentId: commentID }).then(() => {
+      setCommentTrigger(!commentTrigger);
+    });
+  };
+
   return (
-    <View style={styles.comment}>
+    <TouchableOpacity
+      style={styles.comment}
+      onLongPress={async () => {
+        if (user === commentUser) {
+          const choice = await AlertAsync(
+            "Caution❗",
+            "Are you sure you want to delete this comment?",
+            [
+              { text: "Yes", onPress: () => "yes" },
+              { text: "No", onPress: () => Promise.resolve("no") },
+            ],
+            {
+              cancelable: true,
+              onDismiss: () => "no",
+            }
+          );
+          if (choice === "yes") {
+            deleteComment().then(() => {
+              Toast.show({
+                type: "success",
+                text1: "Successfully deleted.",
+                position: "bottom",
+                visibilityTime: 2000,
+              });
+            });
+          } else {
+            return;
+          }
+        }
+      }}
+    >
       <Image
         source={{
           uri: commenterIcon,
@@ -108,15 +154,13 @@ const CommentItem = ({
           />
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   comment: {
     flex: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: "grey",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

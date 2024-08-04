@@ -75,6 +75,7 @@ export default searchItem = ({
       onPress={() =>
         navigation.navigate("Full art", {
           user: user,
+          isGuest: guest,
           artistId: "",
           artworkId: artworkId,
           fav: status,

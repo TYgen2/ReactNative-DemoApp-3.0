@@ -164,8 +164,8 @@ exports.getComment = onCall(async (req) => {
 
     const comments = await Promise.all(
       querySnapshot.docs.map(async (doc) => {
-        const { likedBy, commentUser, artworkId, ...rest } = doc.data();
-        const userInfo = await getUserInfo(commentUser);
+        const { likedBy, artworkId, ...rest } = doc.data();
+        const userInfo = await getUserInfo(rest.commentUser);
         const isLiked = await checkIfUserHasLiked(doc.id);
 
         return {
@@ -222,6 +222,22 @@ exports.likeComment = onCall(async (req) => {
   } catch (error) {
     console.error(error);
     return { status: 500, message: "Error creating liked comment docs" };
+  }
+});
+
+exports.deleteComment = onCall(async (req) => {
+  if (!req.auth) {
+    throw new HttpsError("failed-precondition", "CANT FKING DELETE COMMENT");
+  }
+
+  const { commentId } = req.data;
+
+  try {
+    await db.collection("comments").doc(commentId).delete();
+    return { status: 200, message: "Comment deleted!!" };
+  } catch (error) {
+    console.error(error);
+    return { status: 500, message: "Error deleting comment" };
   }
 });
 

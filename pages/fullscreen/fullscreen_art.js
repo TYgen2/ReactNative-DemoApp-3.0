@@ -58,7 +58,8 @@ const storage = getStorage();
 const Fullscreen = ({ route }) => {
   const navigation = useNavigation();
   const { colors } = useTheme();
-  const { user, artworkId, fav, imgUrl, artistId, onGoBack } = route.params;
+  const { user, isGuest, artworkId, fav, imgUrl, artistId, onGoBack } =
+    route.params;
 
   // state for controlling fav icon, and responsible for passing the
   // most updated status back to artItem screen.
@@ -68,8 +69,14 @@ const Fullscreen = ({ route }) => {
   const [userIcon, setUserIcon] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [artInfo, setArtInfo] = useState();
-  const { fetchTrigger, setFetchTrigger, searchTrigger, setSearchTrigger } =
-    useContext(UpdateContext);
+  const {
+    fetchTrigger,
+    setFetchTrigger,
+    searchTrigger,
+    setSearchTrigger,
+    commentTrigger,
+    setCommentTrigger,
+  } = useContext(UpdateContext);
   const [donwloading, setDownloading] = useState(false);
   const [comment, setComment] = useState("");
   const [commentList, setCommentList] = useState();
@@ -118,9 +125,15 @@ const Fullscreen = ({ route }) => {
 
   useEffect(() => {
     fetchMetadata();
-    getUserInfo();
-    fetchComment();
+    if (!isGuest) {
+      getUserInfo();
+    }
   }, []);
+
+  // controlling comment section / refresh
+  useEffect(() => {
+    fetchComment();
+  }, [commentTrigger]);
 
   // controlling the extra info view
   useEffect(() => {
@@ -166,6 +179,7 @@ const Fullscreen = ({ route }) => {
         commenterName={item["commentUserInfo"]["name"]}
         commentFavStatus={item["likeStatus"]}
         commentLikeCount={item["likeCount"]}
+        commentUser={item["commentUser"]}
         commentID={item["commentId"]}
         comment={item["comment"]}
         user={user}
@@ -442,58 +456,101 @@ const Fullscreen = ({ route }) => {
               justifyContent: "flex-start",
             }}
           >
-            {/* <ActivityIndicator size="small" color="grey" /> */}
-            <BottomSheetFlatList data={commentList} renderItem={renderItem} />
+            <BottomSheetFlatList
+              data={commentList}
+              renderItem={renderItem}
+              contentContainerStyle={{ flexGrow: 1 }}
+              ListEmptyComponent={
+                <View
+                  style={{
+                    flexGrow: 1,
+                    justifyContent: "center",
+                  }}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator size="large" color="#483C32" />
+                  ) : (
+                    <Text
+                      style={{
+                        textAlign: "center",
+                        fontSize: 16,
+                        color: "grey",
+                      }}
+                    >
+                      No one comments yet... 🥱{"\n"}
+                      Be the first one ✨!
+                    </Text>
+                  )}
+                </View>
+              }
+            />
           </View>
 
           {/* write comment */}
           <View style={styles.commentInput}>
-            <Image
-              source={{ uri: isLoading ? "https://" : userIcon }}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 40,
-                marginLeft: 4,
-                backgroundColor: "green",
-              }}
-            />
+            {isGuest ? (
+              <Text
+                style={{
+                  color: colors.subtitle,
+                  flex: 1,
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                Login to comment!
+              </Text>
+            ) : (
+              <View style={{ flex: 1, flexDirection: "row" }}>
+                <Image
+                  source={{ uri: isLoading ? "https://" : userIcon }}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 40,
+                    marginLeft: 4,
+                  }}
+                />
 
-            <BottomSheetTextInput
-              style={{
-                flex: 1,
-                marginLeft: 4,
-                paddingVertical: 4,
-                color: "white",
-                borderBottomWidth: 1,
-                borderBottomColor: "grey",
-              }}
-              selectionColor="grey"
-              value={comment}
-              placeholder="Write your comments here..."
-              placeholderTextColor="grey"
-              onChangeText={(text) => setComment(text)}
-            />
+                <BottomSheetTextInput
+                  style={{
+                    flex: 1,
+                    marginLeft: 4,
+                    paddingVertical: 4,
+                    color: "white",
+                    borderBottomWidth: 1,
+                    borderBottomColor: "grey",
+                  }}
+                  selectionColor="grey"
+                  value={comment}
+                  placeholder="Write your comments here..."
+                  placeholderTextColor="grey"
+                  onChangeText={(text) => setComment(text)}
+                />
 
-            <TouchableOpacity
-              onPress={() => {
-                const commentJSON = {
-                  userId: user,
-                  comment: comment,
-                  artworkId: artworkId,
-                };
-                addComment(commentJSON).then(() => {
-                  fetchComment();
-                  setComment("");
-                });
-              }}
-            >
-              <Icon
-                name="reply"
-                color="white"
-                style={{ paddingHorizontal: 6 }}
-              />
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ justifyContent: "center" }}
+                  onPress={() => {
+                    if (comment) {
+                      const commentJSON = {
+                        userId: user,
+                        comment: comment,
+                        artworkId: artworkId,
+                      };
+                      addComment(commentJSON).then(() => {
+                        setCommentTrigger(!commentTrigger);
+                        setComment("");
+                      });
+                    }
+                  }}
+                >
+                  <Icon
+                    name="reply"
+                    color="white"
+                    style={{ paddingHorizontal: 6 }}
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </BottomSheetView>
       </BottomSheet>

@@ -87,6 +87,7 @@ const artItem = ({
         onPress={() => {
           navigation.navigate("Full art", {
             user: userId,
+            isGuest: guest,
             artistId: "",
             artworkId: artworkId,
             fav: status,

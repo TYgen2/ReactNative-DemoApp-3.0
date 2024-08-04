@@ -58,6 +58,7 @@ const UploadItem = ({ imgUrl, artworkId, guest, user, artistId }) => {
         onPress={() => {
           navigation.navigate("Full art", {
             user: guest ? null : user,
+            isGuest: guest,
             artistId: artistId,
             artworkId: artworkId,
             fav: status,
