@@ -136,7 +136,7 @@ exports.getComment = onCall(async (req) => {
     throw new HttpsError("failed-precondition", "CANT FKING FETCH COMMENT");
   }
 
-  const { artworkId, userId } = req.data;
+  const { artworkId, userId, mode } = req.data;
 
   const getUserInfo = async (userID) => {
     const snapshot = await db.collection("user").doc(userID).get();
@@ -159,7 +159,7 @@ exports.getComment = onCall(async (req) => {
     const commentsRef = db.collection("comments");
     const querySnapshot = await commentsRef
       .where("artworkId", "==", artworkId)
-      .orderBy("likeCount", "desc")
+      .orderBy(mode, "desc")
       .get();
 
     const comments = await Promise.all(

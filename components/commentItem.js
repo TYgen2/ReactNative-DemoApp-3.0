@@ -6,11 +6,14 @@ import { useTheme } from "../context/themeProvider";
 import { functions } from "../firebaseConfig";
 import { httpsCallable } from "firebase/functions";
 import { UpdateContext } from "../context/updateArt";
-import { sleep } from "../utils/tools";
+import { NotifyMessage, sleep } from "../utils/tools";
 import AlertAsync from "react-native-alert-async";
 import Toast from "react-native-toast-message";
 
 const CommentItem = ({
+  user,
+  isGuest,
+  artworkId,
   createdTime,
   commenterIcon,
   commenterName,
@@ -19,8 +22,6 @@ const CommentItem = ({
   commentUser,
   commentID,
   comment,
-  user,
-  artworkId,
 }) => {
   // get initial fav status from Firestore
   const [favStatus, setFavStatus] = useState(commentFavStatus);
@@ -133,6 +134,11 @@ const CommentItem = ({
         <TouchableOpacity
           style={{}}
           onPress={() => {
+            if (isGuest) {
+              NotifyMessage("Sign in to use the like function.");
+              return;
+            }
+
             const likeJSON = {
               userId: user,
               commentId: commentID,

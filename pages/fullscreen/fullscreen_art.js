@@ -105,11 +105,13 @@ const Fullscreen = ({ route }) => {
   // fetch art comment in Firestore using CLOUD FUNCTION
   const fetchComment = async () => {
     const fetchMetaCallable = httpsCallable(functions, "getComment");
-    fetchMetaCallable({ artworkId: artworkId, userId: user }).then(
-      async (res) => {
-        setCommentList(res.data["data"]);
-      }
-    );
+    fetchMetaCallable({
+      artworkId: artworkId,
+      userId: user,
+      mode: "createdTime",
+    }).then(async (res) => {
+      setCommentList(res.data["data"]);
+    });
   };
 
   const getUserInfo = async () => {
@@ -174,6 +176,9 @@ const Fullscreen = ({ route }) => {
   const renderItem = useCallback(
     ({ item }) => (
       <CommentItem
+        user={user}
+        isGuest={isGuest}
+        artworkId={artworkId}
         createdTime={item["createdTime"]}
         commenterIcon={item["commentUserInfo"]["icon"]}
         commenterName={item["commentUserInfo"]["name"]}
@@ -182,8 +187,6 @@ const Fullscreen = ({ route }) => {
         commentUser={item["commentUser"]}
         commentID={item["commentId"]}
         comment={item["comment"]}
-        user={user}
-        artworkId={artworkId}
       />
     ),
     []
@@ -194,7 +197,11 @@ const Fullscreen = ({ route }) => {
       style={[
         styles.container,
         {
-          backgroundColor: isLoading ? "black" : showExtra ? "white" : "black",
+          backgroundColor: isLoading
+            ? "black"
+            : showExtra
+            ? colors.title
+            : colors.invertedText,
         },
       ]}
     >
@@ -250,7 +257,7 @@ const Fullscreen = ({ route }) => {
                 };
 
                 // guest mode
-                if (!user) {
+                if (isGuest) {
                   NotifyMessage("Sign in to use the Favourite function.");
                   return;
                 }
@@ -487,7 +494,15 @@ const Fullscreen = ({ route }) => {
           </View>
 
           {/* write comment */}
-          <View style={styles.commentInput}>
+          <View
+            style={[
+              styles.commentInput,
+              {
+                backgroundColor: colors.background,
+                borderColor: colors.borderColor,
+              },
+            ]}
+          >
             {isGuest ? (
               <Text
                 style={{
@@ -651,12 +666,11 @@ const styles = StyleSheet.create({
   },
   commentInput: {
     flex: 1,
-    backgroundColor: "#28282B",
     borderWidth: 2,
-    borderColor: "white",
     borderRadius: 10,
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 10,
   },
   comment: {
     flex: 1,
