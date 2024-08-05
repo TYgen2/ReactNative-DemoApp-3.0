@@ -1,7 +1,7 @@
 import { Text, TouchableOpacity, Image, View, StyleSheet } from "react-native";
 import { likeComment } from "../services/cloudFunctions";
 import { Icon } from "@rneui/themed";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useTheme } from "../context/themeProvider";
 import { functions } from "../firebaseConfig";
 import { httpsCallable } from "firebase/functions";
@@ -41,6 +41,11 @@ const CommentItem = ({
       setCommentTrigger(!commentTrigger);
     });
   };
+
+  useEffect(() => {
+    setFavStatus(commentFavStatus);
+    setLikeCount(commentLikeCount);
+  }, [commentFavStatus, commentLikeCount]);
 
   return (
     <TouchableOpacity

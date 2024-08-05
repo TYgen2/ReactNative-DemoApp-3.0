@@ -46,6 +46,7 @@ import BottomSheet, {
   useBottomSheetTimingConfigs,
 } from "@gorhom/bottom-sheet";
 import CommentItem from "../../components/commentItem";
+import CustomSwitch from "../../components/customSwitch";
 
 const IGNORED_LOGS = [
   "Non-serializable values were found in the navigation state",
@@ -81,6 +82,9 @@ const Fullscreen = ({ route }) => {
   const [comment, setComment] = useState("");
   const [commentList, setCommentList] = useState();
 
+  // false = sort by like, true = sort by newest
+  const [sortMode, setSortMode] = useState(false);
+
   const myUser = user === artistId ? true : false;
 
   // fetch art metadata in Firestore using CLOUD FUNCTION
@@ -105,10 +109,11 @@ const Fullscreen = ({ route }) => {
   // fetch art comment in Firestore using CLOUD FUNCTION
   const fetchComment = async () => {
     const fetchMetaCallable = httpsCallable(functions, "getComment");
+
     fetchMetaCallable({
       artworkId: artworkId,
       userId: user,
-      mode: "createdTime",
+      mode: sortMode ? "createdTime" : "likeCount",
     }).then(async (res) => {
       setCommentList(res.data["data"]);
     });
@@ -135,7 +140,7 @@ const Fullscreen = ({ route }) => {
   // controlling comment section / refresh
   useEffect(() => {
     fetchComment();
-  }, [commentTrigger]);
+  }, [commentTrigger, sortMode]);
 
   // controlling the extra info view
   useEffect(() => {
@@ -453,12 +458,42 @@ const Fullscreen = ({ route }) => {
           <View style={styles.lineBreak} />
 
           {/* comment section */}
-          <Text style={[styles.commentTitle, { color: colors.title }]}>
-            Comments
-          </Text>
           <View
             style={{
-              flex: 5,
+              flex: 1,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={[
+                styles.commentTitle,
+                {
+                  color: colors.title,
+                },
+              ]}
+            >
+              Comments
+            </Text>
+
+            <View>
+              <Text
+                style={{
+                  color: "grey",
+                  fontSize: 12,
+                  textAlign: "center",
+                  marginBottom: 2,
+                }}
+              >
+                sort by:
+              </Text>
+              <CustomSwitch onToggle={(state) => setSortMode(state)} />
+            </View>
+          </View>
+          <View
+            style={{
+              flex: 4,
               marginVertical: 10,
               justifyContent: "flex-start",
             }}
@@ -653,7 +688,7 @@ const styles = StyleSheet.create({
   commentTitle: {
     fontWeight: "bold",
     fontSize: 20,
-    paddingTop: 10,
+    marginLeft: 4,
   },
   bottomRightBtns: {
     justifyContent: "center",

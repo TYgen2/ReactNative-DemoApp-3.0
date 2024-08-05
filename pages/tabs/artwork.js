@@ -21,6 +21,7 @@ import { UpdateContext } from "../../context/updateArt";
 import { functions } from "../../firebaseConfig";
 import { httpsCallable } from "firebase/functions";
 import { Icon } from "@rneui/themed";
+import { Dropdown } from "react-native-element-dropdown";
 
 const Artwork = ({ route }) => {
   const { colors } = useTheme();
@@ -34,6 +35,13 @@ const Artwork = ({ route }) => {
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const PER_PAGE = 3;
+
+  const MODE = [
+    { label: "Recent Arts 🔥", value: "1" },
+    { label: "Most favourited 🥰", value: "2" },
+  ];
+
+  const [value, setValue] = useState(1);
 
   const flatlistRef = useRef();
   const toTop = () => {
@@ -52,7 +60,11 @@ const Artwork = ({ route }) => {
   // fetch required arts using CLOUD FUNCTION, WORKING!!!
   const fetchArts = async () => {
     const fetchCallable = httpsCallable(functions, "paginationFetch");
-    fetchCallable({ page: currentPage, limit: PER_PAGE }).then(async (res) => {
+    fetchCallable({
+      page: currentPage,
+      limit: PER_PAGE,
+      mode: value === 1 ? "uploadedTime" : "likes",
+    }).then(async (res) => {
       if (initialLoading) {
         setFetchTrigger(true);
         setInitialLoading(false);
@@ -110,7 +122,7 @@ const Artwork = ({ route }) => {
     totalArtCount().then(() => {
       fetchArts();
     });
-  }, [currentPage, fetchTrigger]);
+  }, [currentPage, fetchTrigger, value]);
 
   return (
     <View
@@ -120,9 +132,25 @@ const Artwork = ({ route }) => {
       ]}
     >
       <View style={styles.titleContainer}>
-        <Text style={[styles.title, { color: colors.title }]}>
-          Recent Arts 🔥
-        </Text>
+        <Dropdown
+          data={MODE}
+          value={value}
+          style={{
+            width: 240,
+            marginLeft: 20,
+          }}
+          containerStyle={{ borderRadius: 10 }}
+          labelField="label"
+          valueField="value"
+          onChange={(item) => {
+            setValue(item.value);
+          }}
+          placeholder="Recent Arts 🔥"
+          placeholderStyle={[styles.title, { color: colors.title }]}
+          itemTextStyle={{ fontSize: 12, textAlign: "center" }}
+          itemContainerStyle={{ borderRadius: 10 }}
+          selectedTextStyle={[styles.title, { color: colors.title }]}
+        />
       </View>
       <View style={styles.artContent}>
         <FlatList
@@ -301,12 +329,13 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     flex: 1,
-    justifyContent: "center",
+    flexDirection: "row",
+    alignItems: "center",
   },
   title: {
+    fontSize: 12,
     fontSize: 24,
     fontWeight: "bold",
-    paddingLeft: 24,
   },
   artContent: {
     flex: 12,

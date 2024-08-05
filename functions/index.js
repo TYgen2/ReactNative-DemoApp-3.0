@@ -329,10 +329,10 @@ exports.paginationFetch = onCall(async (req) => {
   }
 
   try {
-    const { page, limit } = req.data;
+    const { page, limit, mode } = req.data;
 
     let illustrationsRef = db.collection("illustrations");
-    let query = illustrationsRef.orderBy("uploadedTime", "desc");
+    let query = illustrationsRef.orderBy(mode, "desc");
 
     let offset = (page - 1) * limit;
 
