@@ -1,6 +1,7 @@
 # 🖼ARTppreciate (React Native, Firebase)
 Same app as 2.0, but now I'm trying to move all the CRUD functions from client-side to
-server-side (using Cloud function). Since its a huge move, around 80% of the app will be remake.
+server-side (using Cloud function). Also adding some new features and code optimization.
+Since its a huge move, around 80% of the app will be remake.
 
 DemoApp 3.0 is still under development.
 
@@ -14,7 +15,13 @@ DemoApp 3.0 is still under development.
 - [x] Profile initialization page right after registeration
 - [x] Rebuild Fullscreen UI
 - [x] Image description
-- [ ] Comment section 80%
+- [x] Comment section
+- [x] Sorting method in comment / fetching arts
+- [x] Changed UI reflect from listener in DB to local
+- [ ] Camera mode for upload
+- [ ] Report function (simulate)
+- [ ] App notification
+- [ ] Social media directly linkage instead of throguh Firebase
 
 ## 📷Screenshots from app
 ### *I do not own any of the arts. This app is just for learning purpose.*
@@ -29,6 +36,6 @@ DemoApp 3.0 is still under development.
 <img src="https://github.com/TYgen2/ReactNative-DemoApp-2.0/assets/93910466/74fb9b82-88b0-4d51-b4b5-a6fadf1964a9" width="200" height="400"/>
 <img src="https://github.com/TYgen2/ReactNative-DemoApp/assets/93910466/897eb363-85db-47a9-9a7a-56ed55555dbf" width="200" height="400"/>
 <img src="https://github.com/TYgen2/ReactNative-DemoApp-2.0/assets/93910466/c19925f4-7229-460a-a9de-17315d6ff4c3" width="200" height="400"/>
-<img src="https://github.com/user-attachments/assets/089717d5-fb6b-43f4-ac25-05113b61c6c0"/>
+<img src="https://github.com/user-attachments/assets/ec73a8ba-92eb-499e-97e8-1e0c6a854754"/>
 <img src="https://github.com/TYgen2/ReactNative-DemoApp/assets/93910466/2a3d1784-7204-438a-ba5b-25f287617576"/>
 <img src="https://github.com/TYgen2/ReactNative-DemoApp-2.0/assets/93910466/d00d4191-fd46-4932-b641-6cc71a5fbb19" width="200" height="400"/>
