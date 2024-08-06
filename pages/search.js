@@ -30,7 +30,7 @@ const Search = ({ route }) => {
 
   const fetchArts = async () => {
     const fetchCallable = httpsCallable(functions, "paginationFetch");
-    fetchCallable({ page: 1, limit: 10 }).then(async (res) => {
+    fetchCallable({ page: 1, limit: 10, mode: "likes" }).then(async (res) => {
       setArtList(res.data["data"]);
       setIsLoading(false);
     });

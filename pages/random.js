@@ -12,6 +12,7 @@ import { useTheme } from "../context/themeProvider";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../firebaseConfig";
 import { UpdateContext } from "../context/updateArt";
+import { useIsFocused } from "@react-navigation/native";
 
 const Random = ({ route }) => {
   const { colors } = useTheme();
@@ -20,6 +21,8 @@ const Random = ({ route }) => {
   const [ranLoading, setRanLoading] = useState(true);
   const [artList, setArtList] = useState([]);
   const { fetchTrigger, setFetchTrigger } = useContext(UpdateContext);
+
+  const isFocused = useIsFocused();
 
   const getRandomInteger = (min, max) => {
     min = Math.ceil(min);
@@ -44,7 +47,7 @@ const Random = ({ route }) => {
 
       const randomPage = getRandomInteger(1, totalArts);
 
-      fetchCallable({ page: randomPage, limit: 1 })
+      fetchCallable({ page: randomPage, limit: 1, mode: "uploadedTime" })
         .then(async (res) => {
           setArtList(res.data["data"]);
         })
@@ -56,7 +59,7 @@ const Random = ({ route }) => {
 
   useEffect(() => {
     fetchRandomArt();
-  }, [fetchTrigger]);
+  }, [fetchTrigger, isFocused]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
