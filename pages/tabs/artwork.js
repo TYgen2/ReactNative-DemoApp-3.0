@@ -63,7 +63,7 @@ const Artwork = ({ route }) => {
     fetchCallable({
       page: currentPage,
       limit: PER_PAGE,
-      mode: value === 1 ? "uploadedTime" : "likes",
+      mode: value == 1 ? "uploadedTime" : "likes",
     }).then(async (res) => {
       if (initialLoading) {
         setFetchTrigger(true);
