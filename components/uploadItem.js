@@ -17,17 +17,19 @@ import { UpdateContext } from "../context/updateArt";
 import Toast from "react-native-toast-message";
 import { deleteFromUploaded } from "../services/cloudFunctions";
 import { httpsCallable } from "firebase/functions";
+import { useSelector } from "react-redux";
 
 const windowWidth = Dimensions.get("window").width;
 const storage = getStorage();
 
-const UploadItem = ({ imgUrl, artworkId, guest, user, artistId }) => {
+const UploadItem = ({ imgUrl, artworkId, artistId }) => {
   const navigation = useNavigation();
   const [status, setStatus] = useState(false);
   const [likes, setLikes] = useState();
   const [likeLoading, setLikeLoading] = useState(true);
 
   const { fetchTrigger, setFetchTrigger } = useContext(UpdateContext);
+  const { user, isGuest } = useSelector((state) => state.user);
 
   // get initial fav status from user Firestore FavArt
   const fetchFavAndLikes = async () => {
@@ -37,7 +39,7 @@ const UploadItem = ({ imgUrl, artworkId, guest, user, artistId }) => {
       return favData.some((art) => art["imgUrl"] === imgUrl);
     };
 
-    fetchCallable({ userId: user, artworkId: artworkId, guest: guest })
+    fetchCallable({ userId: user, artworkId: artworkId, guest: isGuest })
       .then((res) => {
         setLikes(res.data["likeData"]);
         setStatus(checkFavStatus(res.data["favData"]));
@@ -57,8 +59,6 @@ const UploadItem = ({ imgUrl, artworkId, guest, user, artistId }) => {
         activeOpacity={0.8}
         onPress={() => {
           navigation.navigate("Full art", {
-            user: guest ? null : user,
-            isGuest: guest,
             artistId: artistId,
             artworkId: artworkId,
             fav: status,

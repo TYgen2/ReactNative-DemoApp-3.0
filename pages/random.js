@@ -13,10 +13,11 @@ import { httpsCallable } from "firebase/functions";
 import { functions } from "../firebaseConfig";
 import { UpdateContext } from "../context/updateArt";
 import { useIsFocused } from "@react-navigation/native";
+import { useSelector } from "react-redux";
 
-const Random = ({ route }) => {
+const Random = () => {
   const { colors } = useTheme();
-  const { guest, user } = route.params;
+  const { user, isGuest } = useSelector((state) => state.user);
 
   const [ranLoading, setRanLoading] = useState(true);
   const [artList, setArtList] = useState([]);
@@ -84,7 +85,7 @@ const Random = ({ route }) => {
         ) : (
           <ArtItem
             user={user}
-            guest={guest}
+            guest={isGuest}
             width={undefined}
             left={0}
             top={24}

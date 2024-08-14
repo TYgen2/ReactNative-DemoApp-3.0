@@ -13,9 +13,12 @@ import { useNavigation } from "@react-navigation/native";
 import Toggle from "react-native-toggle-element";
 import { useTheme } from "../context/themeProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDispatch } from "react-redux";
+import { logout } from "../store/userReducer";
 
 const CustomDrawer = (props) => {
   const { dark, colors, setScheme } = useTheme();
+  const dispatch = useDispatch();
 
   const ToggleTheme = () => {
     dark ? setScheme("light") : setScheme("dark");
@@ -46,7 +49,11 @@ const CustomDrawer = (props) => {
     initTheme();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
-        navigation.replace("Intro");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Intro" }],
+        });
+        dispatch(logout());
       }
     });
 
@@ -106,7 +113,9 @@ const CustomDrawer = (props) => {
       <TouchableOpacity
         style={[styles.logout, { backgroundColor: colors.drawer }]}
         activeOpacity={0.9}
-        onPress={() => handleSignOut()}
+        onPress={() => {
+          handleSignOut();
+        }}
       >
         <Icon type="material" name="logout" color="white" />
         <Text style={styles.itemText}>Log out</Text>

@@ -23,10 +23,8 @@ import { httpsCallable } from "firebase/functions";
 import { Icon } from "@rneui/themed";
 import { Dropdown } from "react-native-element-dropdown";
 
-const Artwork = ({ route }) => {
+const Artwork = () => {
   const { colors } = useTheme();
-  const { user, guest } = route.params;
-  const [isGuest, setGuest] = useState(guest);
 
   const [artList, setArtList] = useState([]);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -66,7 +64,6 @@ const Artwork = ({ route }) => {
       mode: value == 1 ? "uploadedTime" : "likes",
     }).then(async (res) => {
       if (initialLoading) {
-        setFetchTrigger(true);
         setInitialLoading(false);
       }
 
@@ -85,8 +82,6 @@ const Artwork = ({ route }) => {
   const renderItem = useCallback(
     ({ item }) => (
       <ArtItem
-        user={user}
-        guest={isGuest}
         width={300}
         left={20}
         top={12}

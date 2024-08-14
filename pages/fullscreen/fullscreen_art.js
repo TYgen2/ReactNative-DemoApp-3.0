@@ -47,6 +47,7 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import CommentItem from "../../components/commentItem";
 import CustomSwitch from "../../components/customSwitch";
+import { useSelector } from "react-redux";
 
 const IGNORED_LOGS = [
   "Non-serializable values were found in the navigation state",
@@ -59,8 +60,8 @@ const storage = getStorage();
 const Fullscreen = ({ route }) => {
   const navigation = useNavigation();
   const { colors } = useTheme();
-  const { user, isGuest, artworkId, fav, imgUrl, artistId, onGoBack } =
-    route.params;
+  const { user, isGuest } = useSelector((state) => state.user);
+  const { artworkId, fav, imgUrl, artistId, onGoBack } = route.params;
 
   // state for controlling fav icon, and responsible for passing the
   // most updated status back to artItem screen.
@@ -181,8 +182,6 @@ const Fullscreen = ({ route }) => {
   const renderItem = useCallback(
     ({ item }) => (
       <CommentItem
-        user={user}
-        isGuest={isGuest}
         artworkId={artworkId}
         createdTime={item["createdTime"]}
         commenterIcon={item["commentUserInfo"]["icon"]}

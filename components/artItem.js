@@ -15,10 +15,9 @@ import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { handleFavAndLikes } from "../services/cloudFunctions";
 import { UpdateContext } from "../context/updateArt";
 import { httpsCallable } from "firebase/functions";
+import { useSelector } from "react-redux";
 
 const artItem = ({
-  user,
-  guest,
   width,
   left,
   top,
@@ -30,7 +29,7 @@ const artItem = ({
   imgUrl,
 }) => {
   const navigation = useNavigation();
-  const userId = guest ? null : user;
+  const { user, isGuest } = useSelector((state) => state.user);
 
   const [artistIcon, setArtistIcon] = useState("");
   const [artistSign, setArtistSign] = useState("");
@@ -66,7 +65,7 @@ const artItem = ({
       return favData.some((art) => art["imgUrl"] === imgUrl);
     };
 
-    fetchCallable({ userId: user, artworkId: artworkId, guest: guest })
+    fetchCallable({ userId: user, artworkId: artworkId, guest: isGuest })
       .then((res) => {
         setLikes(res.data["likeData"]);
         setStatus(checkFavStatus(res.data["favData"]));
@@ -86,8 +85,6 @@ const artItem = ({
         activeOpacity={0.8}
         onPress={() => {
           navigation.navigate("Full art", {
-            user: userId,
-            isGuest: guest,
             artistId: "",
             artworkId: artworkId,
             fav: status,
@@ -119,8 +116,6 @@ const artItem = ({
           <TouchableOpacity
             onPress={() => {
               navigation.push("Profile", {
-                user: userId,
-                guest: guest,
                 artistId: artistId,
                 name: artist,
                 sign: artistSign,
@@ -172,13 +167,13 @@ const artItem = ({
               onPress={() => {
                 const handleJSON = {
                   favStatus: status,
-                  userId: userId,
+                  userId: user,
                   imgUrl: imgUrl,
                   artworkId: artworkId,
                   value: status ? -1 : 1,
                 };
 
-                if (guest) {
+                if (isGuest) {
                   NotifyMessage("Sign in to use the Favourite function.");
                   return;
                 } else {

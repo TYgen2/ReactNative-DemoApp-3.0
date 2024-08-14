@@ -14,10 +14,9 @@ import { db, functions } from "../firebaseConfig";
 import { useContext, useEffect, useState } from "react";
 import { httpsCallable } from "firebase/functions";
 import { UpdateContext } from "../context/updateArt";
+import { useSelector } from "react-redux";
 
 export default searchItem = ({
-  user,
-  guest,
   artworkId,
   artName,
   artist,
@@ -27,6 +26,7 @@ export default searchItem = ({
   const navigation = useNavigation();
 
   const { colors } = useTheme();
+  const { user, isGuest } = useSelector((state) => state.user);
 
   const [artistIcon, setArtistIcon] = useState("");
   const [artistSign, setArtistSign] = useState("");
@@ -58,7 +58,7 @@ export default searchItem = ({
       return favData.some((art) => art["imgUrl"] === imgUrl);
     };
 
-    fetchCallable({ userId: user, artworkId: artworkId, guest: guest })
+    fetchCallable({ userId: user, artworkId: artworkId, guest: isGuest })
       .then((res) => {
         setStatus(checkFavStatus(res.data["favData"]));
       })
@@ -74,8 +74,6 @@ export default searchItem = ({
       style={styles.itemContainer}
       onPress={() =>
         navigation.navigate("Full art", {
-          user: user,
-          isGuest: guest,
           artistId: "",
           artworkId: artworkId,
           fav: status,
@@ -90,8 +88,6 @@ export default searchItem = ({
       <TouchableOpacity
         onPress={() => {
           navigation.push("Profile", {
-            user: user,
-            guest: guest,
             artistId: artistId,
             name: artist,
             sign: artistSign,

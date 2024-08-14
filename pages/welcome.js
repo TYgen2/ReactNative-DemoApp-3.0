@@ -4,17 +4,18 @@ import { useTheme } from "../context/themeProvider";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
+  withSequence,
   withTiming,
 } from "react-native-reanimated";
 import { sleep } from "../utils/tools";
-import { auth, db } from "../firebaseConfig";
-import { doc, onSnapshot } from "firebase/firestore";
+import { useSelector } from "react-redux";
 
 const Welcome = ({ route, navigation }) => {
   const { colors } = useTheme();
-  const { newUser, isGuest } = route.params;
-  const [icon, setIcon] = useState("");
-  const [name, setName] = useState("");
+  const { newUser } = route.params;
+
+  const { info } = useSelector((state) => state.user);
 
   // title animation config
   const titleY = useSharedValue(50);
@@ -25,12 +26,6 @@ const Welcome = ({ route, navigation }) => {
       transform: [{ translateY: titleY.value }],
     };
   }, []);
-  const titleOpacity = async () => {
-    titleO.value = withTiming(1, { duration: 1500 });
-    titleY.value = withTiming(0, { duration: 1000 });
-    await sleep(1000);
-    titleY.value = withTiming(-150, { duration: 1000 });
-  };
 
   // icon animation config
   const iconS = useSharedValue(0);
@@ -41,15 +36,6 @@ const Welcome = ({ route, navigation }) => {
       transform: [{ scale: iconS.value }],
     };
   }, []);
-  const iconOpacity = async () => {
-    await sleep(1000);
-    iconO.value = withTiming(1, { duration: 1000 });
-    iconS.value = withTiming(1, { duration: 1000 });
-    await sleep(1000);
-    iconS.value = withTiming(1.1, { duration: 500 });
-    await sleep(500);
-    iconS.value = withTiming(1, { duration: 500 });
-  };
 
   // wave animation config
   const waveS = useSharedValue(1);
@@ -60,50 +46,56 @@ const Welcome = ({ route, navigation }) => {
       transform: [{ scale: waveS.value }],
     };
   }, []);
-  const waveOpacity = async () => {
-    await sleep(1800);
-    waveO.value = withTiming(0.3, { duration: 1000 });
-    waveS.value = withTiming(5, { duration: 1500 });
+
+  const welcomeAnimation = () => {
+    titleO.value = withTiming(1, { duration: 1500 });
+    titleY.value = withSequence(
+      withTiming(0, { duration: 1000 }, (isFinished) => {
+        if (isFinished) {
+          iconO.value = withTiming(1, { duration: 1000 });
+          iconS.value = withSequence(
+            withTiming(1, { duration: 1000 }, (isFinished) => {
+              if (isFinished) {
+                waveO.value = withTiming(0.3, { duration: 1000 });
+                waveS.value = withTiming(6, { duration: 1500 });
+              }
+            }),
+            withTiming(1.1, { duration: 500 }),
+            withTiming(1, { duration: 500 })
+          );
+        }
+      }),
+      withTiming(-150, { duration: 1000 })
+    );
   };
 
   const goMain = async () => {
     await sleep(4000);
     navigation.reset({
       index: 0,
-      routes: [{ name: "Inside", params: { isGuest: isGuest } }],
+      routes: [{ name: "Inside" }],
     });
   };
 
-  const userId = auth.currentUser.uid;
-  const docRef = doc(db, "user", userId);
-
   useEffect(() => {
-    titleOpacity();
-    iconOpacity();
-    waveOpacity();
+    welcomeAnimation();
     goMain();
-
-    const unsubscribe = onSnapshot(docRef, (doc) => {
-      setIcon(doc.data()["Info"]["icon"]);
-      setName(doc.data()["Info"]["name"]);
-    });
-    return () => unsubscribe();
   }, []);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {name && (
+      {info && (
         <Animated.Text
           style={[styles.title, reanimatedTitle, { color: colors.title }]}
         >
           {newUser ? "Welcome to ARTpreciate" : "Welcome back"}
           {"\n"}
-          {name}!!
+          {info["name"]}!!
         </Animated.Text>
       )}
-      {icon && (
+      {info && (
         <Animated.Image
-          source={{ uri: icon }}
+          source={{ uri: info["icon"] }}
           style={[styles.icon, reanimatedIcon]}
         />
       )}

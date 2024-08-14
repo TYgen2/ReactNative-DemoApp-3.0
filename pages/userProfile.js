@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -20,13 +20,15 @@ import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { sleep } from "../utils/tools";
 import { fetchUploaded } from "../services/cloudFunctions";
 import { UpdateContext } from "../context/updateArt";
+import { useSelector } from "react-redux";
 
 const storage = getStorage();
 
 const UserProfile = ({ route }) => {
   const { colors } = useTheme();
+  const { user } = useSelector((state) => state.user);
 
-  const { artistId, name, sign, icon, user, guest } = route.params;
+  const { artistId, name, sign, icon } = route.params;
   const [uploadList, setUploadlist] = useState([]);
   const [newSign, setNewSign] = useState(sign);
   const [tempSign, setTempSign] = useState(sign);
@@ -105,8 +107,6 @@ const UserProfile = ({ route }) => {
     <UploadItem
       imgUrl={item["imgUrl"]}
       artworkId={item["artworkId"]}
-      guest={guest}
-      user={user}
       artistId={artistId}
     />
   );

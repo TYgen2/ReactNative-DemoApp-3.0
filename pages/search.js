@@ -16,9 +16,8 @@ import { httpsCallable } from "firebase/functions";
 import { functions } from "../firebaseConfig";
 import { UpdateContext } from "../context/updateArt";
 
-const Search = ({ route }) => {
+const Search = () => {
   const { colors } = useTheme();
-  const { user, guest } = route.params;
 
   const [isLoading, setIsLoading] = useState(true);
   const [artList, setArtList] = useState([]);
@@ -51,8 +50,6 @@ const Search = ({ route }) => {
 
   const renderItem = ({ item }) => (
     <SearchItem
-      user={user}
-      guest={guest}
       artworkId={item["artworkId"]}
       artName={item["artName"]}
       artist={item["artist"]}

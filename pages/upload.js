@@ -34,15 +34,16 @@ import { useIsFocused } from "@react-navigation/native";
 import { UploadArtToFB } from "../services/fav";
 import { doc, getDoc } from "firebase/firestore";
 import { uploadMetadata } from "../services/cloudFunctions";
+import { useSelector } from "react-redux";
 
 const storage = getStorage();
 
-const Upload = ({ route }) => {
-  const { userId, guest } = route.params;
+const Upload = () => {
+  const { user, isGuest } = useSelector((state) => state.user);
 
   const isFocused = useIsFocused();
 
-  const docRef = doc(db, "user", userId);
+  const docRef = doc(db, "user", user);
 
   const getInfo = async () => {
     const docSnap = await getDoc(docRef);
@@ -55,7 +56,7 @@ const Upload = ({ route }) => {
   };
 
   useEffect(() => {
-    if (!guest) {
+    if (!isGuest) {
       getInfo();
     }
     if (!isFocused) {
@@ -258,14 +259,14 @@ const Upload = ({ route }) => {
                 artFilename: filename,
                 artName: Uncapitalize(name),
                 artist: Uncapitalize(artist),
-                artistId: userId,
+                artistId: user,
                 artDescription: desc,
                 imgUrl: url,
               };
               // after upload the art metadata to Firestore illustrations,
               // return the docID and store it with imgUrl to Firestore user
               uploadMetadata(metadata).then((res) =>
-                UploadArtToFB(userId, {
+                UploadArtToFB(user, {
                   imgUrl: url,
                   artworkId: res.data,
                 }).then(() => setFetchTrigger(!fetchTrigger))
@@ -351,7 +352,7 @@ const Upload = ({ route }) => {
           { backgroundColor: colors.background, marginTop: padTop },
         ]}
       >
-        {guest ? (
+        {isGuest ? (
           <View style={{ alignItems: "center" }}>
             <Text style={[styles.subTitle, { color: colors.title }]}>
               Opps!

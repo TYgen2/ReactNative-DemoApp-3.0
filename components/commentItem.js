@@ -9,10 +9,9 @@ import { UpdateContext } from "../context/updateArt";
 import { NotifyMessage, sleep } from "../utils/tools";
 import AlertAsync from "react-native-alert-async";
 import Toast from "react-native-toast-message";
+import { useSelector } from "react-redux";
 
 const CommentItem = ({
-  user,
-  isGuest,
   artworkId,
   createdTime,
   commenterIcon,
@@ -29,6 +28,7 @@ const CommentItem = ({
 
   const { colors } = useTheme();
   const { commentTrigger, setCommentTrigger } = useContext(UpdateContext);
+  const { user, isGuest } = useSelector((state) => state.user);
 
   const time = new Date(createdTime._seconds * 1000);
   const now = new Date();

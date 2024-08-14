@@ -11,7 +11,7 @@ import { UpdateContext } from "../context/updateArt";
 
 const windowWidth = Dimensions.get("window").width;
 
-export default FavItem = ({ userId, imgUrl, artworkId }) => {
+export default FavItem = ({ imgUrl, artworkId }) => {
   const navigation = useNavigation();
   const { fetchTrigger, setFetchTrigger } = useContext(UpdateContext);
 
@@ -22,7 +22,6 @@ export default FavItem = ({ userId, imgUrl, artworkId }) => {
         activeOpacity={0.8}
         onPress={() => {
           navigation.navigate("Full art", {
-            user: userId,
             artworkId: artworkId,
             fav: true,
             imgUrl: imgUrl,

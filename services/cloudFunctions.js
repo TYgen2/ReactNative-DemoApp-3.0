@@ -13,6 +13,16 @@ export const handleFavAndLikes = async (json) => {
   }
 };
 
+export const invalidFavRemoval = async (json) => {
+  const removalCallable = httpsCallable(functions, "invalidFavRemoval");
+  try {
+    const res = await removalCallable(json);
+    console.log("Firestore updated successfully!!");
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 // upload art metadata to Firestore illustrations using CLOUD FUNCTION, WORKING!!!
 export const uploadMetadata = async (json) => {
   const uploadCallable = httpsCallable(functions, "uploadMetadata");

@@ -1,23 +1,40 @@
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FlatList } from "react-native-gesture-handler";
 import FavItem from "../../components/favItem";
-import { auth, db } from "../../firebaseConfig";
+import { db, functions } from "../../firebaseConfig";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useTheme } from "../../context/themeProvider";
 import { GetHeaderHeight, Uncapitalize, sleep } from "../../utils/tools";
 import { getDownloadURL, getStorage, ref } from "firebase/storage";
 import { DelArt } from "../../services/fav";
+import { useSelector } from "react-redux";
+import { httpsCallable } from "firebase/functions";
+import { invalidFavRemoval } from "../../services/cloudFunctions";
 
 const storage = getStorage();
 
-const Favourites = ({ route }) => {
+const Favourites = () => {
   const { colors } = useTheme();
-  const { user } = route.params;
-  const [isGuest, setGuest] = useState(auth.currentUser.isAnonymous);
+  const { user, isGuest } = useSelector((state) => state.user);
 
   const [favList, setFavList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // fetch art metadata in Firestore using CLOUD FUNCTION
+  const fetchMetadata = async (artworkId) => {
+    const fetchMetaCallable = httpsCallable(functions, "fetchMetdata");
+    const res = await fetchMetaCallable({ artworkId: artworkId });
+    const filenameData = res.data["data"]["artFilename"];
+    return filenameData;
+  };
+
+  // fetch fav art in Firestore using CLOUD FUNCTION
+  const fetchFav = async () => {
+    const fetchCallable = httpsCallable(functions, "fetchFav");
+    const res = await fetchCallable({ userId: user });
+    setFavList(res.data["favData"]);
+  };
 
   const checkArtExists = async (artRef) => {
     try {
@@ -33,121 +50,109 @@ const Favourites = ({ route }) => {
   };
 
   const checkValidFav = async () => {
-    setIsLoading(true);
     // delete art from Fav if the original art doesn't exist anymore
-    favList.forEach((item) => {
-      const filename =
-        Uncapitalize(item["artName"]) +
-        "_" +
-        Uncapitalize(item["artist"]) +
-        ".jpg";
+    favList.forEach(async (item) => {
+      const filename = await fetchMetadata(item["artworkId"]);
       const artRefs = ref(storage, `arts/${filename}`);
 
       checkArtExists(artRefs).then((res) => {
         // art has been deleted from the artist, proceed to delete it from Fav
         if (!res) {
-          DelArt(user, item);
+          const handleJSON = {
+            userId: user,
+            imgUrl: item["imgUrl"],
+            artworkId: item["artworkId"],
+          };
+          invalidFavRemoval(handleJSON);
         }
       });
     });
 
-    await sleep(1000);
-    setIsLoading(false);
+    console.log("All arts are valid");
   };
 
-  if (!isGuest) {
-    const docRef = doc(db, "user", user);
+  const renderItem = ({ item }) => (
+    <FavItem imgUrl={item["imgUrl"]} artworkId={item["artworkId"]} />
+  );
 
-    // when doc changes (user delete or add favourite to Firestore),
-    // favList will be updated accordingly.
-    useEffect(() => {
-      // checkValidFav();
+  // when doc changes (user delete or add favourite to Firestore),
+  // favList will be updated accordingly.
+  useEffect(() => {
+    let unsubscribe;
+    if (!isGuest) {
+      fetchFav().then(() => checkValidFav());
 
-      const unsubscribe = onSnapshot(docRef, async (doc) => {
+      const docRef = doc(db, "user", user);
+      unsubscribe = onSnapshot(docRef, (doc) => {
         setFavList(doc.data()["FavArt"]);
-        await sleep(1000);
-        setIsLoading(false);
       });
-      return () => unsubscribe();
-    }, [favList.length]);
+    }
+    return () => unsubscribe && unsubscribe();
+  }, []);
 
-    const renderItem = ({ item }) => (
-      <FavItem
-        userId={user}
-        artistId=""
-        imgUrl={item["imgUrl"]}
-        artworkId={item["artworkId"]}
-      />
-    );
-
-    return (
-      <View style={[styles.container, { marginTop: GetHeaderHeight() }]}>
-        <View style={styles.titleContainer}>
-          <Text style={[styles.title, { color: colors.title }]}>
-            My Favourites ❤
-          </Text>
-        </View>
-        <View style={styles.artContent}>
-          <FlatList
-            // when favList is empty
-            ListEmptyComponent={
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                {isLoading ? (
-                  <ActivityIndicator size="large" color="#483C32" />
-                ) : (
-                  <View
-                    style={{ alignItems: "center", justifyContent: "center" }}
-                  >
-                    <Text style={[styles.subTitle, { color: colors.title }]}>
-                      No favourited art yet
-                    </Text>
-                    <Text style={{ color: colors.subtitle }}>
-                      Too many choices? Try out the Random function!
-                    </Text>
-                  </View>
-                )}
-              </View>
-            }
-            columnWrapperStyle={{
-              justifyContent: "space-between",
-              paddingHorizontal: 16,
-              paddingVertical: 4,
-            }}
-            contentContainerStyle={{ flexGrow: 1 }}
-            overScrollMode="never"
-            horizontal={false}
-            data={favList}
-            numColumns={2}
-            renderItem={renderItem}
-          />
-        </View>
+  return !isGuest ? (
+    <View style={[styles.container, { marginTop: GetHeaderHeight() }]}>
+      <View style={styles.titleContainer}>
+        <Text style={[styles.title, { color: colors.title }]}>
+          My Favourites ❤
+        </Text>
       </View>
-    );
-  }
-  // guest mode
-  else {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View
-          style={[
-            styles.artContent,
-            { justifyContent: "center", alignItems: "center" },
-          ]}
-        >
-          <Text style={[styles.subTitle, { color: colors.title }]}>Opps!</Text>
-          <Text style={{ color: colors.subtitle }}>
-            Sign in to use the Favourites function.
-          </Text>
-        </View>
+      <View style={styles.artContent}>
+        <FlatList
+          // when favList is empty
+          ListEmptyComponent={
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="large" color="#483C32" />
+              ) : (
+                <View
+                  style={{ alignItems: "center", justifyContent: "center" }}
+                >
+                  <Text style={[styles.subTitle, { color: colors.title }]}>
+                    No favourited art yet
+                  </Text>
+                  <Text style={{ color: colors.subtitle }}>
+                    Too many choices? Try out the Random function!
+                  </Text>
+                </View>
+              )}
+            </View>
+          }
+          columnWrapperStyle={{
+            justifyContent: "space-between",
+            paddingHorizontal: 16,
+            paddingVertical: 4,
+          }}
+          contentContainerStyle={{ flexGrow: 1 }}
+          overScrollMode="never"
+          horizontal={false}
+          data={favList}
+          numColumns={2}
+          renderItem={renderItem}
+        />
       </View>
-    );
-  }
+    </View>
+  ) : (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View
+        style={[
+          styles.artContent,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <Text style={[styles.subTitle, { color: colors.title }]}>Opps!</Text>
+        <Text style={{ color: colors.subtitle }}>
+          Sign in to use the Favourites function.
+        </Text>
+      </View>
+    </View>
+  );
 };
 
 export default Favourites;

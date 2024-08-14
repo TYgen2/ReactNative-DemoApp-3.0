@@ -73,6 +73,45 @@ exports.handleFavAndLikes = onCall(async (req) => {
   }
 });
 
+exports.invalidFavRemoval = onCall(async (req) => {
+  if (!req.auth) {
+    throw new HttpsError("failed-precondition", "CANT FKING REMOVE FAV ARTS");
+  }
+
+  const { userId, imgUrl, artworkId } = req.data;
+
+  try {
+    await db
+      .collection("user")
+      .doc(userId)
+      .update({
+        FavArt: FieldValue.arrayRemove({ imgUrl, artworkId }),
+      });
+  } catch (error) {
+    console.error(error);
+    return { status: 500, message: "Error updating Firestore when DELETING" };
+  }
+});
+
+exports.fetchFav = onCall(async (req) => {
+  if (!req.auth) {
+    throw new HttpsError("failed-precondition", "CANT FKING FETCH FAV DATA");
+  }
+
+  const { userId } = req.data;
+
+  let favData;
+
+  try {
+    const favSnapshot = await db.collection("user").doc(userId).get();
+    favData = favSnapshot.data()["FavArt"];
+
+    return { status: 200, favData: favData };
+  } catch (error) {
+    return { status: 500, error: error.message };
+  }
+});
+
 exports.fetchFavAndLikes = onCall(async (req) => {
   if (!req.auth) {
     throw new HttpsError(
@@ -241,7 +280,7 @@ exports.deleteComment = onCall(async (req) => {
   }
 });
 
-// fetch art metadata when in Fullscreen **WORKING NOW, DONT FKING TOUCH**
+// fetch art metadata of artwork **WORKING NOW, DONT FKING TOUCH**
 exports.fetchMetdata = onCall(async (req) => {
   if (!req.auth) {
     throw new HttpsError("failed-precondition", "CANT FKING FETCH ARTS");

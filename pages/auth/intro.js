@@ -8,8 +8,8 @@ import {
 } from "react-native";
 import { signInAnon } from "../../services/auth";
 import { useNavigation } from "@react-navigation/native";
-import { auth, db, functions } from "../../firebaseConfig";
-import { useEffect, useState } from "react";
+import { auth, db } from "../../firebaseConfig";
+import { useEffect } from "react";
 import {
   onAuthStateChanged,
   GoogleAuthProvider,
@@ -21,6 +21,9 @@ import * as WebBrowser from "expo-web-browser";
 import { createEmptyFav } from "../../services/fav";
 import { LoginManager, AccessToken } from "react-native-fbsdk-next";
 import { doc, getDoc } from "firebase/firestore";
+import { useDispatch, useSelector } from "react-redux";
+import { isGuest, loginUser } from "../../store/userReducer";
+import { getInfo } from "../../store/profileInfoAction";
 
 const windowWidth = Dimensions.get("window").width;
 
@@ -28,6 +31,9 @@ WebBrowser.maybeCompleteAuthSession();
 
 const IntroPage = () => {
   const navigation = useNavigation();
+  // using Redux to handle user & guest state globally
+  const dispatch = useDispatch();
+  const { info } = useSelector((state) => state.user);
 
   // Google sign in
   const [request, response, promptAsync] = Google.useAuthRequest({
@@ -77,34 +83,52 @@ const IntroPage = () => {
       });
   };
 
+  const loginWithExisting = async (user) => {
+    try {
+      await dispatch(getInfo(user)).unwrap();
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Welcome", params: { newUser: false } }],
+      });
+    } catch (error) {
+      console.error("Cant login with existing user: ", error);
+    }
+  };
+
+  const loginWithGuest = () => {
+    try {
+      dispatch(isGuest(true));
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Inside" }],
+      });
+    } catch (error) {
+      console.error("Cant login with guest: ", error);
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const docRef = doc(db, "user", user.uid);
         const docSnap = await getDoc(docRef);
 
+        // Update user global state
+        dispatch(loginUser(user.uid));
+
         // new user
         if (!docSnap.exists() && !user.isAnonymous) {
           await createEmptyFav(user.uid, user.uid);
-
           navigation.navigate("Change name", {
             provider: user.providerData[0]["providerId"],
             user: user.uid,
           });
         } else if (user.isAnonymous) {
           // guest
-          navigation.reset({
-            index: 0,
-            routes: [{ name: "Inside", params: { isGuest: true } }],
-          });
+          loginWithGuest();
         } else {
           // existing user
-          navigation.reset({
-            index: 0,
-            routes: [
-              { name: "Welcome", params: { newUser: false, isGuest: false } },
-            ],
-          });
+          loginWithExisting(user.uid);
         }
       }
     });
