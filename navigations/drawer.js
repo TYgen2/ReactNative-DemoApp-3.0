@@ -9,7 +9,6 @@ import { useTheme } from "../context/themeProvider";
 import Search from "../pages/search";
 import Upload from "../pages/upload";
 import { useSelector } from "react-redux";
-import { useEffect, useState } from "react";
 
 const NavDrawer = ({ navigation }) => {
   const { colors } = useTheme();
@@ -17,12 +16,6 @@ const NavDrawer = ({ navigation }) => {
   const { user, isGuest, info } = useSelector((state) => state.user);
 
   const Drawer = createDrawerNavigator();
-
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    setIsReady(true);
-  }, []);
 
   return (
     <Drawer.Navigator

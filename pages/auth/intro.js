@@ -21,7 +21,7 @@ import * as WebBrowser from "expo-web-browser";
 import { createEmptyFav } from "../../services/fav";
 import { LoginManager, AccessToken } from "react-native-fbsdk-next";
 import { doc, getDoc } from "firebase/firestore";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { isGuest, loginUser } from "../../store/userReducer";
 import { getInfo } from "../../store/profileInfoAction";
 

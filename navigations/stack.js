@@ -10,15 +10,32 @@ import { ArtContextProvider } from "../context/updateArt";
 import ChangeName from "../pages/auth/changeName";
 import Welcome from "../pages/welcome";
 import EditProfile from "../pages/auth/editProfile";
+import { useSelector } from "react-redux";
+import { useEffect } from "react";
 
 const Stack = createStackNavigator();
 
 const NavStack = () => {
   const { colors } = useTheme();
+  const { user, isGuest, info } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    if (user) {
+      console.log(
+        "logged with",
+        info["name"],
+        "previously, now go to main page"
+      );
+    } else {
+      console.log("haven't login yet!");
+    }
+  }, []);
 
   return (
     <ArtContextProvider>
-      <Stack.Navigator>
+      <Stack.Navigator
+        initialRouteName={user && !isGuest ? "Welcome" : "Intro"}
+      >
         <Stack.Screen
           name="Intro"
           component={IntroPage}
@@ -59,6 +76,7 @@ const NavStack = () => {
         <Stack.Screen
           name="Welcome"
           component={Welcome}
+          initialParams={{ newUser: false }}
           options={{
             headerShown: false,
           }}

@@ -6,8 +6,9 @@ import Toast from "react-native-toast-message";
 import { ThemeProvider } from "./context/themeProvider";
 import algoliasearch from "algoliasearch/lite";
 import { InstantSearch } from "react-instantsearch-core";
-import { store } from "./store/store";
+import { persistor, store } from "./store/store";
 import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
 
 const searchClient = algoliasearch(
   "W0PCNV7SEO",
@@ -23,12 +24,17 @@ export default function App() {
   return (
     <ThemeProvider>
       <Provider store={store}>
-        <NavigationContainer>
-          <InstantSearch searchClient={searchClient} indexName="illustrations">
-            <NavStack />
-            <Toast />
-          </InstantSearch>
-        </NavigationContainer>
+        <PersistGate persistor={persistor}>
+          <NavigationContainer>
+            <InstantSearch
+              searchClient={searchClient}
+              indexName="illustrations"
+            >
+              <NavStack />
+              <Toast />
+            </InstantSearch>
+          </NavigationContainer>
+        </PersistGate>
       </Provider>
     </ThemeProvider>
   );
