@@ -53,7 +53,6 @@ const CustomDrawer = (props) => {
           index: 0,
           routes: [{ name: "Intro" }],
         });
-        dispatch(logout());
       }
     });
 
@@ -115,6 +114,7 @@ const CustomDrawer = (props) => {
         activeOpacity={0.9}
         onPress={() => {
           handleSignOut();
+          dispatch(logout());
         }}
       >
         <Icon type="material" name="logout" color="white" />

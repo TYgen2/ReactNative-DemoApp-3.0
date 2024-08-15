@@ -5,9 +5,8 @@ import FavItem from "../../components/favItem";
 import { db, functions } from "../../firebaseConfig";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useTheme } from "../../context/themeProvider";
-import { GetHeaderHeight, Uncapitalize, sleep } from "../../utils/tools";
+import { GetHeaderHeight } from "../../utils/tools";
 import { getDownloadURL, getStorage, ref } from "firebase/storage";
-import { DelArt } from "../../services/fav";
 import { useSelector } from "react-redux";
 import { httpsCallable } from "firebase/functions";
 import { invalidFavRemoval } from "../../services/cloudFunctions";
@@ -31,9 +30,11 @@ const Favourites = () => {
 
   // fetch fav art in Firestore using CLOUD FUNCTION
   const fetchFav = async () => {
-    const fetchCallable = httpsCallable(functions, "fetchFav");
-    const res = await fetchCallable({ userId: user });
-    setFavList(res.data["favData"]);
+    if (!isGuest) {
+      const fetchCallable = httpsCallable(functions, "fetchFav");
+      const res = await fetchCallable({ userId: user });
+      setFavList(res.data["favData"]);
+    }
   };
 
   const checkArtExists = async (artRef) => {
@@ -78,16 +79,17 @@ const Favourites = () => {
   // when doc changes (user delete or add favourite to Firestore),
   // favList will be updated accordingly.
   useEffect(() => {
-    let unsubscribe;
-    if (!isGuest) {
-      fetchFav().then(() => checkValidFav());
+    fetchFav().then(() => checkValidFav());
+  }, []);
 
+  useEffect(() => {
+    if (!isGuest) {
       const docRef = doc(db, "user", user);
-      unsubscribe = onSnapshot(docRef, (doc) => {
+      const unsubscribe = onSnapshot(docRef, (doc) => {
         setFavList(doc.data()["FavArt"]);
       });
+      return () => unsubscribe();
     }
-    return () => unsubscribe && unsubscribe();
   }, []);
 
   return !isGuest ? (

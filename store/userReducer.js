@@ -13,12 +13,12 @@ export const userSlice = createSlice({
   reducers: {
     loginUser: (state, action) => {
       state.user = action.payload;
+      state.isGuest = false;
     },
     isGuest: (state) => {
       state.isGuest = true;
     },
     logout: (state) => {
-      state.isGuest = false;
       state.info = [];
     },
   },
