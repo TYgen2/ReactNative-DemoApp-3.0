@@ -34,12 +34,6 @@ const CustomDrawer = (props) => {
     try {
       const theme = await AsyncStorage.getItem("theme");
       setToggleValue(JSON.parse(theme));
-
-      if (theme == "true") {
-        setScheme("dark");
-      } else {
-        setScheme("light");
-      }
     } catch (e) {
       console.log(e);
     }

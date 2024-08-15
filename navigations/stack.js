@@ -12,14 +12,30 @@ import Welcome from "../pages/welcome";
 import EditProfile from "../pages/auth/editProfile";
 import { useSelector } from "react-redux";
 import { useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Stack = createStackNavigator();
 
 const NavStack = () => {
-  const { colors } = useTheme();
+  const { colors, setScheme } = useTheme();
   const { user, isGuest, info } = useSelector((state) => state.user);
 
+  const initTheme = async () => {
+    try {
+      const theme = await AsyncStorage.getItem("theme");
+
+      if (theme == "true") {
+        setScheme("dark");
+      } else {
+        setScheme("light");
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   useEffect(() => {
+    initTheme();
     if (user) {
       console.log(
         "logged with",
