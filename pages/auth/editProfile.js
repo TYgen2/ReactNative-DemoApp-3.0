@@ -8,13 +8,15 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Icon } from "@rneui/themed";
 import { EditIcon, EditSign } from "../../services/fav";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { DEFAULT_ICON, DEFAULT_SIGN } from "../../utils/constants";
+import { useDispatch, useSelector } from "react-redux";
+import { getInfo } from "../../store/profileInfoAction";
 
 const storage = getStorage();
 
@@ -23,8 +25,9 @@ const EditProfile = ({ route, navigation }) => {
 
   const [sign, setSign] = useState(DEFAULT_SIGN);
   const [showIcon, setShowIcon] = useState(DEFAULT_ICON);
-  const [isSignInputFocused, setSignInputFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const dispatch = useDispatch();
 
   const changeIcon = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -83,6 +86,16 @@ const EditProfile = ({ route, navigation }) => {
       <Text style={styles.name}>{name}</Text>
 
       {/* profile sign */}
+      <Text
+        style={{
+          fontSize: 16,
+          marginBottom: 4,
+          color: "grey",
+          fontStyle: "italic",
+        }}
+      >
+        About you 💭{" "}
+      </Text>
       <View style={styles.sign}>
         <Icon name="edit" type="font-awesome-5" size={14} />
         <Text
@@ -109,9 +122,6 @@ const EditProfile = ({ route, navigation }) => {
           },
         ]}
         onChangeText={(text) => setSign(text)}
-        onFocus={() => setSignInputFocused(true)}
-        onSubmitEditing={() => setSignInputFocused(false)}
-        onEndEditing={() => setSignInputFocused(false)}
       />
 
       {/* DONE button */}
@@ -123,14 +133,12 @@ const EditProfile = ({ route, navigation }) => {
         disabled={
           sign == DEFAULT_SIGN && showIcon == DEFAULT_ICON ? true : false
         }
-        onPress={() => {
-          EditSign(user, sign).then(() => {
-            navigation.reset({
-              index: 0,
-              routes: [
-                { name: "Welcome", params: { newUser: true, isGuest: false } },
-              ],
-            });
+        onPress={async () => {
+          await EditSign(user, sign);
+          await dispatch(getInfo(user)).unwrap();
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "Welcome", params: { newUser: true } }],
           });
         }}
       >
@@ -155,10 +163,10 @@ const EditProfile = ({ route, navigation }) => {
         disabled={
           sign == DEFAULT_SIGN && showIcon == DEFAULT_ICON ? true : false
         }
-        onPress={() => {
+        onPress={async () => {
           setSign(DEFAULT_SIGN);
           setShowIcon(DEFAULT_ICON);
-          EditIcon(user, DEFAULT_ICON);
+          await EditIcon(user, DEFAULT_ICON);
         }}
       >
         <Icon name="refresh" />
@@ -174,12 +182,11 @@ const EditProfile = ({ route, navigation }) => {
       >
         <TouchableOpacity
           style={{ backgroundColor: "#CCCCFF", borderRadius: 10, padding: 8 }}
-          onPress={() => {
+          onPress={async () => {
+            await dispatch(getInfo(user)).unwrap();
             navigation.reset({
               index: 0,
-              routes: [
-                { name: "Welcome", params: { newUser: true, isGuest: false } },
-              ],
+              routes: [{ name: "Welcome", params: { newUser: true } }],
             });
           }}
         >

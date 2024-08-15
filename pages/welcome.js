@@ -4,7 +4,6 @@ import { useTheme } from "../context/themeProvider";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withDelay,
   withSequence,
   withTiming,
 } from "react-native-reanimated";

@@ -91,14 +91,9 @@ const ChangeName = ({ route, navigation }) => {
         />
         <TouchableOpacity
           style={styles.buttonContainer}
-          onPress={() => {
-            EditName(user, name);
-            navigation.reset({
-              index: 0,
-              routes: [
-                { name: "Edit profile", params: { user: user, name: name } },
-              ],
-            });
+          onPress={async () => {
+            await EditName(user, name);
+            navigation.navigate("Edit profile", { user: user, name: name });
           }}
         >
           <Text style={styles.buttonText}>Next</Text>

@@ -20,13 +20,15 @@ import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { sleep } from "../utils/tools";
 import { fetchUploaded } from "../services/cloudFunctions";
 import { UpdateContext } from "../context/updateArt";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { getInfo } from "../store/profileInfoAction";
 
 const storage = getStorage();
 
 const UserProfile = ({ route }) => {
   const { colors } = useTheme();
   const { user } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
 
   const { artistId, name, sign, icon } = route.params;
   const [uploadList, setUploadlist] = useState([]);
@@ -58,8 +60,8 @@ const UserProfile = ({ route }) => {
     setTempSign(newSign);
   };
 
-  const handleConfirm = () => {
-    EditSign(user, tempSign);
+  const handleConfirm = async () => {
+    await EditSign(user, tempSign).then(() => dispatch(getInfo(user)));
     setNewSign(tempSign);
     setVisible(false);
   };
@@ -93,8 +95,8 @@ const UserProfile = ({ route }) => {
       const artRefs = ref(storage, "userIcon/" + filename);
 
       await uploadBytes(artRefs, blob).then((snapshot) => {
-        getDownloadURL(artRefs).then((url) => {
-          EditIcon(user, url);
+        getDownloadURL(artRefs).then(async (url) => {
+          await EditIcon(user, url).then(() => dispatch(getInfo(user)));
           setShowIcon(url);
         });
       });
@@ -158,7 +160,7 @@ const UserProfile = ({ route }) => {
               onChangeText={(text) => setTempSign(text)}
               style={{ color: "black" }}
             />
-            <Dialog.Button label="Cancel" onPress={async () => handleCancel} />
+            <Dialog.Button label="Cancel" onPress={() => handleCancel()} />
             <Dialog.Button label="Confirm" onPress={handleConfirm} />
           </Dialog.Container>
           <Icon

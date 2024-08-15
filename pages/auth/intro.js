@@ -21,7 +21,7 @@ import * as WebBrowser from "expo-web-browser";
 import { createEmptyFav } from "../../services/fav";
 import { LoginManager, AccessToken } from "react-native-fbsdk-next";
 import { doc, getDoc } from "firebase/firestore";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { isGuest, loginUser } from "../../store/userReducer";
 import { getInfo } from "../../store/profileInfoAction";
 
@@ -33,7 +33,6 @@ const IntroPage = () => {
   const navigation = useNavigation();
   // using Redux to handle user & guest state globally
   const dispatch = useDispatch();
-  const { info } = useSelector((state) => state.user);
 
   // Google sign in
   const [request, response, promptAsync] = Google.useAuthRequest({
@@ -107,6 +106,25 @@ const IntroPage = () => {
     }
   };
 
+  const loginNewUser = async (user) => {
+    try {
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: "Change name",
+            params: {
+              provider: user.providerData[0]["providerId"],
+              user: user.uid,
+            },
+          },
+        ],
+      });
+    } catch (error) {
+      console.error("Cant login with new user: ", error);
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -119,10 +137,7 @@ const IntroPage = () => {
         // new user
         if (!docSnap.exists() && !user.isAnonymous) {
           await createEmptyFav(user.uid, user.uid);
-          navigation.navigate("Change name", {
-            provider: user.providerData[0]["providerId"],
-            user: user.uid,
-          });
+          loginNewUser(user);
         } else if (user.isAnonymous) {
           // guest
           loginWithGuest();
@@ -166,7 +181,9 @@ const IntroPage = () => {
             style={[styles.button, { backgroundColor: "#000" }]}
             onPress={() => navigation.navigate("Sign up")}
           >
-            <Text style={[styles.buttonText, { color: "#fff" }]}>Register</Text>
+            <Text style={[styles.buttonText, { color: "#fff" }]}>
+              Register with Email
+            </Text>
           </TouchableOpacity>
           <View style={styles.SMLogin}>
             <TouchableOpacity

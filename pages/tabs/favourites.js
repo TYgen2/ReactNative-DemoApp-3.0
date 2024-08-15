@@ -79,7 +79,7 @@ const Favourites = () => {
   // when doc changes (user delete or add favourite to Firestore),
   // favList will be updated accordingly.
   useEffect(() => {
-    fetchFav().then(() => checkValidFav());
+    fetchFav().then(() => checkValidFav().then(() => setIsLoading(false)));
   }, []);
 
   useEffect(() => {
