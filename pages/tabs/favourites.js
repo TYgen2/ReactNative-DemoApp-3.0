@@ -6,12 +6,9 @@ import { db, functions } from "../../firebaseConfig";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useTheme } from "../../context/themeProvider";
 import { GetHeaderHeight } from "../../utils/tools";
-import { getDownloadURL, getStorage, ref } from "firebase/storage";
 import { useSelector } from "react-redux";
 import { httpsCallable } from "firebase/functions";
 import { invalidFavRemoval } from "../../services/cloudFunctions";
-
-const storage = getStorage();
 
 const Favourites = () => {
   const { colors } = useTheme();
@@ -24,52 +21,37 @@ const Favourites = () => {
   const fetchMetadata = async (artworkId) => {
     const fetchMetaCallable = httpsCallable(functions, "fetchMetdata");
     const res = await fetchMetaCallable({ artworkId: artworkId });
-    const filenameData = res.data["data"]["artFilename"];
-    return filenameData;
+    return res.data;
   };
 
   // fetch fav art in Firestore using CLOUD FUNCTION
-  const fetchFav = async () => {
+  const fetchAndCheck = async () => {
     if (!isGuest) {
       const fetchCallable = httpsCallable(functions, "fetchFav");
       const res = await fetchCallable({ userId: user });
-      setFavList(res.data["favData"]);
+      let tmpList = res.data["favData"];
+      const validItems = [];
+
+      await Promise.all(
+        tmpList.map(async (art) => {
+          const valid = await fetchMetadata(art["artworkId"]);
+          if (valid["data"] != null) {
+            validItems.push(art);
+          } else {
+            const handleJSON = {
+              userId: user,
+              imgUrl: art["imgUrl"],
+              artworkId: art["artworkId"],
+            };
+            await invalidFavRemoval(handleJSON);
+          }
+        })
+      );
+      console.log("Arts validation done");
+
+      setFavList(validItems);
+      setIsLoading(false);
     }
-  };
-
-  const checkArtExists = async (artRef) => {
-    try {
-      const response = await getDownloadURL(artRef);
-
-      // file with same name already exist
-      if (response) {
-        return true;
-      }
-    } catch (e) {
-      return false;
-    }
-  };
-
-  const checkValidFav = async () => {
-    // delete art from Fav if the original art doesn't exist anymore
-    favList.forEach(async (item) => {
-      const filename = await fetchMetadata(item["artworkId"]);
-      const artRefs = ref(storage, `arts/${filename}`);
-
-      checkArtExists(artRefs).then((res) => {
-        // art has been deleted from the artist, proceed to delete it from Fav
-        if (!res) {
-          const handleJSON = {
-            userId: user,
-            imgUrl: item["imgUrl"],
-            artworkId: item["artworkId"],
-          };
-          invalidFavRemoval(handleJSON);
-        }
-      });
-    });
-
-    console.log("All arts are valid");
   };
 
   const renderItem = ({ item }) => (
@@ -79,17 +61,26 @@ const Favourites = () => {
   // when doc changes (user delete or add favourite to Firestore),
   // favList will be updated accordingly.
   useEffect(() => {
-    fetchFav().then(() => checkValidFav().then(() => setIsLoading(false)));
-  }, []);
+    const fetchDataAndSetupListener = async () => {
+      await fetchAndCheck(); // Make sure this completes first
 
-  useEffect(() => {
-    if (!isGuest) {
-      const docRef = doc(db, "user", user);
-      const unsubscribe = onSnapshot(docRef, (doc) => {
-        setFavList(doc.data()["FavArt"]);
-      });
-      return () => unsubscribe();
-    }
+      if (!isGuest) {
+        const docRef = doc(db, "user", user);
+        const delay = 5000; // 5 seconds
+
+        const unsubscribe = setTimeout(() => {
+          const unsubscribeListener = onSnapshot(docRef, (doc) => {
+            setFavList(doc.data()["FavArt"]);
+          });
+
+          // Clean up the listener when the component unmounts or dependencies change
+          return () => unsubscribeListener();
+        }, delay);
+
+        return () => clearTimeout(unsubscribe); // Clear the timeout if the component unmounts
+      }
+    };
+    fetchDataAndSetupListener();
   }, []);
 
   return !isGuest ? (
