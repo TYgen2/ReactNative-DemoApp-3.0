@@ -18,6 +18,7 @@ DemoApp 3.0 is still under development.
 - [x] Comment section
 - [x] Sorting method in comment / fetching arts
 - [x] Changed UI reflect from listener in DB to local
+- [x] Redux integration
 - [ ] Camera mode for upload
 - [ ] Report function (simulate)
 - [ ] App notification
