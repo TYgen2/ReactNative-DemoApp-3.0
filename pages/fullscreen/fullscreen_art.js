@@ -82,6 +82,7 @@ const Fullscreen = ({ route }) => {
   const [donwloading, setDownloading] = useState(false);
   const [comment, setComment] = useState("");
   const [commentList, setCommentList] = useState();
+  const [isCommenting, setIsCommenting] = useState(false);
 
   // false = sort by like, true = sort by newest
   const [sortMode, setSortMode] = useState(false);
@@ -500,7 +501,10 @@ const Fullscreen = ({ route }) => {
             <BottomSheetFlatList
               data={commentList}
               renderItem={renderItem}
-              contentContainerStyle={{ flexGrow: 1 }}
+              contentContainerStyle={{
+                flexGrow: 1,
+                opacity: isCommenting ? 0.4 : 1,
+              }}
               ListEmptyComponent={
                 <View
                   style={{
@@ -580,12 +584,14 @@ const Fullscreen = ({ route }) => {
                   style={{ justifyContent: "center" }}
                   onPress={() => {
                     if (comment) {
+                      setIsCommenting(true);
                       const commentJSON = {
                         userId: user,
                         comment: comment,
                         artworkId: artworkId,
                       };
                       addComment(commentJSON).then(() => {
+                        setIsCommenting(false);
                         setCommentTrigger(!commentTrigger);
                         setComment("");
                       });

@@ -62,22 +62,14 @@ const Favourites = () => {
   // favList will be updated accordingly.
   useEffect(() => {
     const fetchDataAndSetupListener = async () => {
-      await fetchAndCheck(); // Make sure this completes first
-
+      await fetchAndCheck();
       if (!isGuest) {
         const docRef = doc(db, "user", user);
-        const delay = 5000; // 5 seconds
+        const unsubscribeListener = onSnapshot(docRef, (doc) => {
+          setFavList(doc.data()["FavArt"]);
+        });
 
-        const unsubscribe = setTimeout(() => {
-          const unsubscribeListener = onSnapshot(docRef, (doc) => {
-            setFavList(doc.data()["FavArt"]);
-          });
-
-          // Clean up the listener when the component unmounts or dependencies change
-          return () => unsubscribeListener();
-        }, delay);
-
-        return () => clearTimeout(unsubscribe); // Clear the timeout if the component unmounts
+        return () => unsubscribeListener();
       }
     };
     fetchDataAndSetupListener();
